@@ -2,6 +2,7 @@ import { Router, type RequestHandler } from "express";
 import { authenticateUser } from "../../middlewares/auth/authenticateMiddleware.js";
 import { authorizeRole } from "../../middlewares/auth/authorizeMiddleware.js";
 import { fetchData } from "../../controllers/controllers.js";
+import contractHiringHiringManagerRouter from "../../modules/contractHiring/hiringManager/router.js";
 
 const router = Router();
 
@@ -27,5 +28,11 @@ router.get(
     }
   }) as RequestHandler
 );
+
+/**
+ * Contract Hiring Module Routes
+ * @route /api/v1/hiring-manager/openings, /api/v1/hiring-manager/profiles
+ */
+router.use("/", contractHiringHiringManagerRouter);
 
 export default router;

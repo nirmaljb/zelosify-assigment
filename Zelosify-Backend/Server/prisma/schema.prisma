@@ -44,6 +44,82 @@ model Tenants {
   updatedAt           DateTime  @updatedAt
 
   users               User[]
+  openings            Opening[]
+}
+
+// Contract Hiring Module Models
+
+model Opening {
+  id                     String        @id @default(uuid())
+  tenantId               String
+  title                  String
+  description            String?
+  location               String?
+  contractType           String?
+  hiringManagerId        String
+  experienceMin          Int
+  experienceMax          Int?
+  postedDate             DateTime      @default(now())
+  expectedCompletionDate DateTime?
+  actionDate             DateTime?
+  status                 OpeningStatus @default(OPEN)
+
+  // [REVIEW: spec requires skill matching but does not define required skills on Opening]
+  // Adding requiredSkills as JSON array to support deterministic skill matching
+  requiredSkills         String[]      @default([])
+
+  tenant                 Tenants         @relation(fields: [tenantId], references: [tenantId])
+  hiringProfiles         hiringProfile[]
+
+  @@index([tenantId])
+  @@index([hiringManagerId])
+}
+
+model hiringProfile {
+  id          Int           @id @default(autoincrement())
+  openingId   String
+  s3Key       String        @unique
+  uploadedBy  String
+  submittedAt DateTime      @default(now())
+  status      ProfileStatus @default(SUBMITTED)
+
+  shortlistedBy String?
+  shortlistedAt DateTime?
+  rejectedBy    String?
+  rejectedAt    DateTime?
+
+  // AI Agent Fields
+  recommended              Boolean?
+  recommendationScore      Float?
+  recommendationReason     String?
+  recommendationLatencyMs  Int?
+  recommendationVersion    String?
+  recommendationConfidence Float?
+  recommendedAt            DateTime?
+
+  // [REVIEW: spec requires persistence of intermediate reasoning metadata]
+  // Adding reasoningMetadata as JSON to store agent reasoning state
+  reasoningMetadata        Json?
+
+  isDeleted Boolean @default(false)
+
+  opening Opening @relation(fields: [openingId], references: [id])
+
+  @@index([openingId])
+  @@index([recommended])
+  @@index([uploadedBy])
+}
+
+enum OpeningStatus {
+  OPEN
+  CLOSED
+  ON_HOLD
+}
+
+enum ProfileStatus {
+  SUBMITTED
+  SHORTLISTED
+  REJECTED
 }
 
 enum AuthProvider {
