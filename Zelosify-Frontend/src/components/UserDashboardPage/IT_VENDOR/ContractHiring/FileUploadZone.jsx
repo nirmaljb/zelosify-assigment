@@ -243,23 +243,26 @@ export default function FileUploadZone({
 
       {/* Upload Button */}
       {pendingCount > 0 && (
-        <Button
-          onClick={onUpload}
-          disabled={isUploading}
-          className="w-full"
-        >
-          {isUploading ? (
-            <>
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              Uploading...
-            </>
-          ) : (
-            <>
-              <Upload className="h-4 w-4 mr-2" />
-              Upload {pendingCount} {pendingCount === 1 ? "file" : "files"}
-            </>
-          )}
-        </Button>
+        <div className="flex justify-end">
+          <Button
+            onClick={onUpload}
+            disabled={isUploading}
+            size="sm"
+            className="w-auto"
+          >
+            {isUploading ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Uploading...
+              </>
+            ) : (
+              <>
+                <Upload className="h-4 w-4 mr-2" />
+                Upload {pendingCount} {pendingCount === 1 ? "file" : "files"}
+              </>
+            )}
+          </Button>
+        </div>
       )}
     </div>
   );

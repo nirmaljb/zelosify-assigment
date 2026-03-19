@@ -54,7 +54,7 @@ const Header = memo(({ isSidebarOpen }) => {
     <header
       className={`${
         isSidebarOpen ? "pl-[12rem]" : "pl-[5rem]"
-      } h-16 flex items-center justify-between sticky top-0 z-40 bg-background border-b border-border`}
+      } h-16 flex items-center justify-between sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border`}
     >
       <div className="flex items-center justify-end px-6 w-full">
         {/* <div className="flex items-center gap-4 flex-1">
@@ -81,11 +81,11 @@ const Header = memo(({ isSidebarOpen }) => {
                 setTheme(currentTheme === "dark" ? "light" : "dark")
               }
             />
-            <div className="w-12 h-6 bg-gray-200 dark:bg-gray-700 dark:border dark:border-gray-700 rounded-full peer peer-checked:after:translate-x-6 rtl:peer-checked:after:-translate-x-6 after:content-[''] after:absolute after:top-[4px] after:start-[4px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-black">
+            <div className="w-10 h-5 bg-zinc-900 border border-zinc-800 rounded-full peer peer-checked:after:translate-x-5 rtl:peer-checked:after:-translate-x-5 after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-white after:shadow-sm">
               {currentTheme === "dark" ? (
-                <Moon className="absolute left-1 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white" />
+                <Moon className="absolute left-1 top-1/2 transform -translate-y-1/2 h-3 w-3 text-white peer-checked:text-black z-10" />
               ) : (
-                <Sun className="absolute right-1 top-1/2 transform -translate-y-1/2 h-4 w-4 text-black" />
+                <Sun className="absolute right-1 top-1/2 transform -translate-y-1/2 h-3 w-3 text-black z-10" />
               )}
             </div>
           </label>

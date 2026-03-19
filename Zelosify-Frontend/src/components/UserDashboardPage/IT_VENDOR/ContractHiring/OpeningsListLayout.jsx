@@ -46,9 +46,9 @@ function getContractTypeLabel(type) {
  */
 function getLocationBadgeClass(locationType) {
   if (locationType === "REMOTE") {
-    return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400";
+    return "bg-emerald-500/20 text-emerald-500 border-transparent font-bold uppercase tracking-widest";
   }
-  return "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400";
+  return "bg-blue-500/20 text-blue-500 border-transparent font-bold uppercase tracking-widest";
 }
 
 /**
@@ -113,31 +113,33 @@ function Pagination({ pagination, onPrevPage, onNextPage, hasPrevPage, hasNextPa
   const endItem = Math.min(page * pagination.limit, total);
 
   return (
-    <div className="flex items-center justify-between px-4 py-3 border-t border-border">
-      <p className="text-sm text-muted-foreground">
+    <div className="flex items-center justify-between px-6 py-4 border-t border-border bg-card">
+      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
         Showing {startItem} to {endItem} of {total} openings
       </p>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3">
         <Button
           variant="outline"
           size="sm"
           onClick={onPrevPage}
           disabled={!hasPrevPage}
+          className="rounded-none border-border bg-background hover:bg-muted text-[10px] font-bold uppercase tracking-widest text-foreground"
         >
-          <ChevronLeft className="h-4 w-4" />
+          <ChevronLeft className="h-3 w-3 mr-1" />
           Previous
         </Button>
-        <span className="text-sm text-muted-foreground px-2">
-          Page {page} of {totalPages}
+        <span className="text-[10px] font-bold text-foreground uppercase tracking-widest px-2">
+          {page} / {totalPages}
         </span>
         <Button
           variant="outline"
           size="sm"
           onClick={onNextPage}
           disabled={!hasNextPage}
+          className="rounded-none border-border bg-background hover:bg-muted text-[10px] font-bold uppercase tracking-widest text-foreground"
         >
           Next
-          <ChevronRight className="h-4 w-4" />
+          <ChevronRight className="h-3 w-3 ml-1" />
         </Button>
       </div>
     </div>
@@ -181,9 +183,9 @@ export default function OpeningsListLayout() {
   };
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex min-h-screen bg-background text-foreground selection:bg-foreground selection:text-background">
       <div className="flex-1 overflow-y-auto">
-        <div className="p-4 md:p-6">
+        <div className="max-w-7xl mx-auto px-8 py-12">
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
             <div>
@@ -207,20 +209,20 @@ export default function OpeningsListLayout() {
                 placeholder="Search openings..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 text-sm border border-border rounded-md bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+                className="w-full pl-10 pr-4 py-3 text-sm bg-background border border-border rounded-none text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground transition-colors"
               />
             </div>
           </div>
 
           {/* Table */}
-          <div className="border border-border rounded-lg overflow-hidden bg-card">
+          <div className="border border-border rounded-none overflow-hidden bg-card shadow-sm">
             {error ? (
               <ErrorState message={error} onRetry={refresh} />
             ) : (
               <>
                 <Table>
                   <TableHeader>
-                    <TableRow className="bg-muted/50">
+                    <TableRow className="border-b border-border bg-muted/50 hover:bg-muted/50">
                       <TableHead className="font-semibold">Title</TableHead>
                       <TableHead className="font-semibold">Location</TableHead>
                       <TableHead className="font-semibold">Contract Type</TableHead>
@@ -258,7 +260,7 @@ export default function OpeningsListLayout() {
                             <div className="flex items-center gap-2">
                               <span className="text-foreground">{opening.location}</span>
                               <span
-                                className={`px-2 py-0.5 text-xs rounded-full ${getLocationBadgeClass(
+                                className={`px-2 py-0.5 text-[10px] rounded-full ${getLocationBadgeClass(
                                   opening.locationType
                                 )}`}
                               >
@@ -273,7 +275,7 @@ export default function OpeningsListLayout() {
                           </TableCell>
                           <TableCell>
                             <span className="text-muted-foreground">
-                              {formatDate(opening.postedAt)}
+                              {formatDate(opening.postedDate)}
                             </span>
                           </TableCell>
                           <TableCell>

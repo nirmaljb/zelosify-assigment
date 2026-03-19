@@ -52,13 +52,13 @@ function getContractTypeLabel(type) {
 function getStatusBadgeClass(status) {
   switch (status) {
     case "OPEN":
-      return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400";
+      return "bg-emerald-500/20 text-emerald-500 border-transparent font-bold uppercase tracking-widest";
     case "CLOSED":
-      return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400";
+      return "bg-red-500/20 text-red-500 border-transparent font-bold uppercase tracking-widest";
     case "ON_HOLD":
-      return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400";
+      return "bg-amber-500/20 text-amber-500 border-transparent font-bold uppercase tracking-widest";
     default:
-      return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400";
+      return "bg-zinc-800 text-zinc-300 border-transparent font-bold uppercase tracking-widest";
   }
 }
 
@@ -111,13 +111,13 @@ function ErrorState({ message, onRetry }) {
  */
 function InfoItem({ icon: Icon, label, value }) {
   return (
-    <div className="flex items-start gap-3">
-      <div className="flex-shrink-0 h-8 w-8 rounded-md bg-muted flex items-center justify-center">
-        <Icon className="h-4 w-4 text-muted-foreground" />
+    <div className="flex items-start gap-4 p-4 bg-muted/40 border border-border rounded-none shadow-sm">
+      <div className="flex-shrink-0 h-10 w-10 rounded-none bg-background border border-border flex items-center justify-center">
+        <Icon className="h-4 w-4 text-zinc-400" />
       </div>
       <div>
-        <p className="text-xs text-muted-foreground">{label}</p>
-        <p className="text-sm font-medium text-foreground">{value}</p>
+        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">{label}</p>
+        <p className="text-sm font-bold text-foreground tracking-tight">{value}</p>
       </div>
     </div>
   );
@@ -153,17 +153,17 @@ export default function OpeningDetailLayout({ openingId }) {
   }, [router]);
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex min-h-screen bg-background text-foreground selection:bg-foreground selection:text-background">
       <div className="flex-1 overflow-y-auto">
         <div className="p-4 md:p-6 max-w-6xl mx-auto">
           {/* Back Button */}
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             onClick={handleBackClick}
-            className="mb-4"
+            className="mb-8 rounded-none border-border bg-background hover:bg-muted text-foreground transition-all font-bold uppercase tracking-widest text-[10px]"
           >
-            <ArrowLeft className="h-4 w-4 mr-2" />
+            <ArrowLeft className="h-3 w-3 mr-2" />
             Back to Openings
           </Button>
 
@@ -176,24 +176,24 @@ export default function OpeningDetailLayout({ openingId }) {
               {/* Header */}
               <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                 <div>
-                  <div className="flex items-center gap-3 mb-2">
-                    <h1 className="text-2xl font-bold text-foreground">
-                      {opening.title}
-                    </h1>
+                  <h1 className="text-4xl font-bold tracking-tighter text-foreground">
+                    {opening.title}
+                  </h1>
+                  <div className="flex items-center gap-3 mt-4">
                     <span
-                      className={`px-2 py-1 text-xs rounded-full ${getStatusBadgeClass(
+                      className={`px-2 py-0.5 text-[10px] rounded-full ${getStatusBadgeClass(
                         opening.status
                       )}`}
                     >
                       {opening.status}
                     </span>
+                    <p className="text-muted-foreground font-bold uppercase tracking-widest text-[10px]">
+                      {opening.location} · {getContractTypeLabel(opening.contractType)}
+                    </p>
                   </div>
-                  <p className="text-muted-foreground">
-                    {opening.location} · {getContractTypeLabel(opening.contractType)}
-                  </p>
                 </div>
-                <Button variant="outline" size="sm" onClick={refresh}>
-                  <RefreshCw className="h-4 w-4 mr-2" />
+                <Button variant="outline" size="sm" onClick={refresh} className="rounded-none border-border bg-background hover:bg-muted shadow-sm font-bold uppercase tracking-widest text-[10px] h-10 px-4 text-foreground">
+                  <RefreshCw className="h-3.5 w-3.5 mr-2" />
                   Refresh
                 </Button>
               </div>
@@ -212,97 +212,82 @@ export default function OpeningDetailLayout({ openingId }) {
                 />
                 <InfoItem
                   icon={MapPin}
-                  label="Location Type"
-                  value={opening.locationType === "REMOTE" ? "Remote" : "Onsite"}
+                  label="Location"
+                  value={opening.location || "-"}
                 />
                 <InfoItem
                   icon={Calendar}
                   label="Posted"
-                  value={formatDate(opening.postedAt)}
+                  value={formatDate(opening.postedDate)}
                 />
               </div>
 
-              {/* Description */}
-              {opening.description && (
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-base">Description</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+              {/* Description & Required Skills Section */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {opening.description && (
+                  <div className="md:col-span-2 p-8 bg-card border border-border rounded-none shadow-sm">
+                    <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-6">Description</h3>
+                    <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
                       {opening.description}
                     </p>
-                  </CardContent>
-                </Card>
-              )}
+                  </div>
+                )}
 
-              {/* Required Skills */}
-              {opening.requiredSkills && opening.requiredSkills.length > 0 && (
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-base">Required Skills</CardTitle>
-                  </CardHeader>
-                  <CardContent>
+                {opening.requiredSkills && opening.requiredSkills.length > 0 && (
+                  <div className="p-8 bg-card border border-border rounded-none shadow-sm">
+                    <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-6">Required Skills</h3>
                     <div className="flex flex-wrap gap-2">
                       {opening.requiredSkills.map((skill, index) => (
                         <span
                           key={index}
-                          className="px-3 py-1 text-sm bg-muted text-foreground rounded-full"
+                          className="px-3 py-1.5 text-[10px] font-bold bg-muted text-foreground rounded-none uppercase tracking-widest"
                         >
                           {skill}
                         </span>
                       ))}
                     </div>
-                  </CardContent>
-                </Card>
-              )}
+                  </div>
+                )}
+              </div>
 
               <Separator />
 
               {/* Upload Section */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-12">
                 {/* Upload Zone */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <Briefcase className="h-5 w-5" />
-                      Upload Candidate Profiles
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <FileUploadZone
-                      files={files}
-                      isUploading={isUploading}
-                      onAddFiles={addFiles}
-                      onRemoveFile={removeFile}
-                      onUpload={uploadAll}
-                      onClear={clearFiles}
-                    />
-                  </CardContent>
-                </Card>
+                <div className="p-8 bg-card border border-border rounded-none shadow-sm">
+                  <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-8 flex items-center gap-3">
+                    <Briefcase className="h-4 w-4" />
+                    Upload Candidate Profiles
+                  </h3>
+                  <FileUploadZone
+                    files={files}
+                    isUploading={isUploading}
+                    onAddFiles={addFiles}
+                    onRemoveFile={removeFile}
+                    onUpload={uploadAll}
+                    onClear={clearFiles}
+                  />
+                </div>
 
                 {/* Uploaded Profiles */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-base flex items-center justify-between">
-                      <span className="flex items-center gap-2">
-                        Uploaded Profiles
-                        {profiles.length > 0 && (
-                          <span className="text-sm font-normal text-muted-foreground">
-                            ({profiles.length})
-                          </span>
-                        )}
-                      </span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ProfilesList
-                      profiles={profiles}
-                      isLoading={isLoading}
-                      onRefresh={refresh}
-                    />
-                  </CardContent>
-                </Card>
+                <div className="p-8 bg-background border border-border rounded-none shadow-sm">
+                  <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-8 flex items-center justify-between">
+                    <span className="flex items-center gap-3">
+                      Uploaded Profiles
+                      {profiles.length > 0 && (
+                        <span className="ml-2 text-muted-foreground font-normal">
+                          ({profiles.length})
+                        </span>
+                      )}
+                    </span>
+                  </h3>
+                  <ProfilesList
+                    profiles={profiles}
+                    isLoading={isLoading}
+                    onRefresh={refresh}
+                  />
+                </div>
               </div>
             </div>
           ) : null}

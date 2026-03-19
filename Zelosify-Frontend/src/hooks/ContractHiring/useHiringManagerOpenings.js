@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import axiosInstance from "@/utils/Auth/axiosInstance";
+import axiosInstance from "@/utils/Axios/AxiosInstance";
 
 /**
  * Hook for fetching hiring manager openings with pagination.
@@ -28,7 +28,7 @@ export default function useHiringManagerOpenings({ limit = 10 } = {}) {
       });
 
       const { data, pagination: paginationData } = response.data;
-      
+
       setOpenings(data || []);
       setPagination({
         page: paginationData?.page || page,

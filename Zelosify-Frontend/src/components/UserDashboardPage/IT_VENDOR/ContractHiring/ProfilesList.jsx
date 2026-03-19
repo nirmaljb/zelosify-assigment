@@ -43,13 +43,13 @@ function getFileExtension(fileName) {
 function getStatusBadgeClass(status) {
   switch (status) {
     case "SUBMITTED":
-      return "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400";
+      return "bg-zinc-800 text-zinc-300 border-transparent font-bold uppercase tracking-widest";
     case "SHORTLISTED":
-      return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400";
+      return "bg-emerald-500/20 text-emerald-500 border-transparent font-bold uppercase tracking-widest";
     case "REJECTED":
-      return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400";
+      return "bg-red-500/20 text-red-500 border-transparent font-bold uppercase tracking-widest";
     default:
-      return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400";
+      return "bg-zinc-800 text-zinc-400 border-transparent font-bold uppercase tracking-widest";
   }
 }
 
@@ -58,15 +58,15 @@ function getStatusBadgeClass(status) {
  */
 function ProfilesSkeleton() {
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {Array.from({ length: 3 }).map((_, i) => (
-        <div key={i} className="flex items-center gap-4 p-4 rounded-lg border border-border">
-          <Skeleton className="h-10 w-10 rounded" />
-          <div className="flex-1 space-y-2">
-            <Skeleton className="h-4 w-48" />
-            <Skeleton className="h-3 w-32" />
+        <div key={i} className="flex items-center gap-6 p-6 rounded-none border border-border bg-card shadow-sm">
+          <Skeleton className="h-12 w-12 rounded-none bg-muted" />
+          <div className="flex-1 space-y-3">
+            <Skeleton className="h-5 w-64 bg-muted" />
+            <Skeleton className="h-3 w-40 bg-muted" />
           </div>
-          <Skeleton className="h-8 w-20" />
+          <Skeleton className="h-10 w-24 rounded-none bg-muted" />
         </div>
       ))}
     </div>
@@ -78,11 +78,11 @@ function ProfilesSkeleton() {
  */
 function EmptyState() {
   return (
-    <div className="flex flex-col items-center justify-center py-12 text-center border border-dashed border-border rounded-lg">
-      <FileText className="h-12 w-12 text-muted-foreground mb-4" />
-      <h3 className="text-lg font-medium text-foreground mb-2">No profiles uploaded</h3>
-      <p className="text-sm text-muted-foreground">
-        Upload candidate profiles using the form above
+    <div className="flex flex-col items-center justify-center py-16 text-center border border-dashed border-border rounded-none bg-muted/30 shadow-sm">
+      <FileText className="h-12 w-12 text-muted-foreground mb-6" />
+      <h3 className="text-lg font-bold text-foreground mb-2 uppercase tracking-widest">No profiles uploaded</h3>
+      <p className="text-sm text-muted-foreground max-w-xs mx-auto leading-relaxed">
+        Start by uploading candidate profiles using the zone above.
       </p>
     </div>
   );
@@ -185,39 +185,38 @@ export default function ProfilesList({ profiles, isLoading, onRefresh }) {
 
   return (
     <>
-      <div className="space-y-3">
+      <div className="space-y-4">
         {profiles.map((profile) => (
           <div
             key={profile.id}
-            className="flex items-center gap-4 p-4 rounded-lg border border-border bg-card hover:bg-muted/30 transition-colors"
+            className="flex items-center gap-6 p-6 rounded-none border border-border bg-card hover:border-foreground/50 transition-all duration-300 shadow-sm group selection:bg-foreground selection:text-background"
           >
             {/* File Icon */}
-            <div className="flex-shrink-0 h-10 w-10 rounded bg-muted flex items-center justify-center">
-              <span className="text-xs font-medium text-muted-foreground">
+            <div className="flex-shrink-0 h-14 w-14 rounded-none bg-background border border-border flex items-center justify-center group-hover:bg-foreground group-hover:border-foreground transition-all duration-300">
+              <span className="text-[10px] font-bold text-muted-foreground group-hover:text-background uppercase tracking-widest">
                 {getFileExtension(profile.fileName)}
               </span>
             </div>
 
             {/* File Info */}
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground truncate">
+              <p className="text-base font-bold text-foreground truncate tracking-tight mb-2 uppercase group-hover:underline decoration-foreground decoration-2 underline-offset-4">
                 {profile.fileName}
               </p>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+              <div className="flex items-center gap-3 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                 <span>{formatDate(profile.uploadedAt)}</span>
-                <span>·</span>
-                <span className={`px-2 py-0.5 rounded-full ${getStatusBadgeClass(profile.status)}`}>
+                <span className="text-border">/</span>
+                <span className={`px-2 py-0.5 text-[10px] rounded-full ${getStatusBadgeClass(profile.status)}`}>
                   {profile.status}
                 </span>
               </div>
             </div>
 
-            {/* Actions */}
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
               <Button
-                variant="ghost"
+                variant="outline"
                 size="icon"
-                className="h-8 w-8"
+                className="h-10 w-10 rounded-none border-border bg-background hover:bg-foreground hover:text-background transition-all"
                 onClick={() => handlePreviewClick(profile)}
                 disabled={previewLoading[profile.id]}
                 title="Preview"
@@ -230,9 +229,9 @@ export default function ProfilesList({ profiles, isLoading, onRefresh }) {
               </Button>
 
               <Button
-                variant="ghost"
+                variant="outline"
                 size="icon"
-                className="h-8 w-8"
+                className="h-10 w-10 rounded-none border-border bg-background hover:bg-foreground hover:text-background transition-all"
                 onClick={() => handleDownloadClick(profile)}
                 title="Download"
               >
@@ -240,9 +239,9 @@ export default function ProfilesList({ profiles, isLoading, onRefresh }) {
               </Button>
 
               <Button
-                variant="ghost"
+                variant="outline"
                 size="icon"
-                className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                className="h-10 w-10 rounded-none border-border bg-background hover:bg-red-600 hover:border-red-600 hover:text-white transition-all"
                 onClick={() => handleDeleteClick(profile)}
                 title="Delete"
               >

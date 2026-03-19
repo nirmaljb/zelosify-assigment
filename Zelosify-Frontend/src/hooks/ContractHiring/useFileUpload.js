@@ -26,14 +26,14 @@ function isValidFileType(file) {
  * @typedef {Object} FileUploadState
  * @property {File} file - The file object
  * @property {string} id - Unique identifier
- * @property {'pending'|'presigning'|'uploading'|'submitting'|'completed'|'error'} status
+ * @property {'pending'|'uploading'|'completed'|'error'} status
  * @property {number} progress - Upload progress (0-100)
  * @property {string|null} error - Error message if failed
  * @property {string|null} s3Key - S3 key after successful upload
  */
 
 /**
- * Hook for managing file uploads with S3 presigned URLs
+ * Hook for managing file uploads through backend (bypasses S3 CORS)
  * @param {string} openingId - The opening ID to upload files to
  * @param {Function} onUploadComplete - Callback when all uploads complete
  * @returns {Object} upload state and handlers
@@ -96,57 +96,16 @@ export function useFileUpload(openingId, onUploadComplete) {
   }, []);
 
   /**
-   * Upload a single file to S3
+   * Update multiple files' state
    */
-  const uploadSingleFile = useCallback(
-    async (fileState) => {
-      const { file, id } = fileState;
-
-      try {
-        // Step 1: Get presigned URL
-        updateFile(id, { status: "presigning", progress: 10 });
-
-        const presignResponse = await axiosInstance.post(
-          `/api/v1/vendor/openings/${openingId}/profiles/presign`,
-          {
-            files: [{ fileName: file.name, fileType: file.type }],
-          }
-        );
-
-        const presignedData = presignResponse.data.data[0];
-        if (!presignedData?.uploadUrl || !presignedData?.s3Key) {
-          throw new Error("Invalid presign response");
-        }
-
-        // Step 2: Upload to S3
-        updateFile(id, { status: "uploading", progress: 30 });
-
-        await fetch(presignedData.uploadUrl, {
-          method: "PUT",
-          body: file,
-          headers: {
-            "Content-Type": file.type,
-          },
-        });
-
-        updateFile(id, {
-          status: "completed",
-          progress: 100,
-          s3Key: presignedData.s3Key,
-        });
-
-        return { success: true, s3Key: presignedData.s3Key, fileName: file.name };
-      } catch (error) {
-        const errorMessage = error.response?.data?.message || error.message;
-        updateFile(id, { status: "error", error: errorMessage });
-        return { success: false, error: errorMessage };
-      }
-    },
-    [openingId, updateFile]
-  );
+  const updateFiles = useCallback((fileIds, updates) => {
+    setFiles((prev) =>
+      prev.map((f) => (fileIds.includes(f.id) ? { ...f, ...updates } : f))
+    );
+  }, []);
 
   /**
-   * Upload all pending files and submit to backend
+   * Upload all pending files through backend
    */
   const uploadAll = useCallback(async () => {
     const pendingFiles = files.filter((f) => f.status === "pending");
@@ -154,47 +113,56 @@ export function useFileUpload(openingId, onUploadComplete) {
 
     setIsUploading(true);
 
+    // Mark all pending files as uploading
+    const pendingIds = pendingFiles.map((f) => f.id);
+    updateFiles(pendingIds, { status: "uploading", progress: 10 });
+
     try {
-      // Upload all files to S3
-      const uploadResults = await Promise.all(
-        pendingFiles.map((f) => uploadSingleFile(f))
+      // Create FormData with all files
+      const formData = new FormData();
+      pendingFiles.forEach((fileState) => {
+        formData.append("files", fileState.file);
+      });
+
+      // Upload through backend using axios (handles auth cookies automatically)
+      const response = await axiosInstance.post(
+        `/api/v1/vendor/openings/${openingId}/profiles/direct-upload`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+          onUploadProgress: (progressEvent) => {
+            if (progressEvent.total) {
+              const progress = Math.round((progressEvent.loaded / progressEvent.total) * 90) + 10;
+              updateFiles(pendingIds, { progress });
+            }
+          },
+        }
       );
 
-      // Collect successful uploads
-      const successfulUploads = uploadResults.filter((r) => r.success);
+      // Mark files as completed
+      updateFiles(pendingIds, { status: "completed", progress: 100 });
 
-      if (successfulUploads.length === 0) {
-        setIsUploading(false);
-        return;
-      }
-
-      // Submit to backend
-      const submitPayload = {
-        profiles: successfulUploads.map((u) => ({
-          s3Key: u.s3Key,
-          fileName: u.fileName,
-        })),
-      };
-
-      await axiosInstance.post(
-        `/api/v1/vendor/openings/${openingId}/profiles/upload`,
-        submitPayload
-      );
-
-      // Clear successfully uploaded files
-      setFiles((prev) =>
-        prev.filter((f) => f.status !== "completed")
-      );
+      // Clear completed files after a short delay
+      setTimeout(() => {
+        setFiles((prev) => prev.filter((f) => f.status !== "completed"));
+      }, 500);
 
       if (onUploadComplete) {
-        onUploadComplete(successfulUploads.length);
+        onUploadComplete(response.data?.data?.created || pendingFiles.length);
       }
     } catch (error) {
-      console.error("Upload submission error:", error);
+      console.error("Upload error:", error);
+      const errorMessage = error.response?.data?.error || error.message || "Upload failed";
+      updateFiles(pendingIds, { 
+        status: "error", 
+        error: errorMessage 
+      });
     } finally {
       setIsUploading(false);
     }
-  }, [files, openingId, onUploadComplete, uploadSingleFile]);
+  }, [files, openingId, onUploadComplete, updateFiles]);
 
   /**
    * Get upload progress summary

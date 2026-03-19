@@ -42,9 +42,9 @@ function formatDate(dateString) {
  */
 function getStatusBadge(status) {
   const styles = {
-    OPEN: "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20",
-    CLOSED: "bg-zinc-500/10 text-zinc-400 border border-zinc-500/20",
-    ON_HOLD: "bg-amber-500/10 text-amber-500 border border-amber-500/20",
+    OPEN: "bg-emerald-500/20 text-emerald-500 border-transparent font-bold",
+    CLOSED: "bg-red-500/20 text-red-500 border-transparent font-bold",
+    ON_HOLD: "bg-amber-500/20 text-amber-500 border-transparent font-bold",
   };
   return styles[status] || styles.OPEN;
 }
@@ -54,13 +54,15 @@ function getStatusBadge(status) {
  */
 function StatsCard({ icon: Icon, label, value, subtext, accentColor }) {
   return (
-    <div className="flex items-center gap-3 p-4 rounded-lg bg-card border border-border hover:border-zinc-600 transition-colors">
-      <div className={`p-2 rounded-md ${accentColor}`}>
-        <Icon className="h-4 w-4" />
+    <div className="flex flex-col gap-4 p-6 rounded-none bg-card border border-border hover:border-foreground/50 transition-colors shadow-sm">
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-medium text-muted-foreground uppercase tracking-widest">{label}</p>
+        <div className={`p-1.5 rounded-sm ${accentColor}`}>
+          <Icon className="h-3.5 w-3.5" />
+        </div>
       </div>
       <div>
-        <p className="text-2xl font-semibold text-foreground">{value}</p>
-        <p className="text-xs text-muted-foreground">{label}</p>
+        <p className="text-4xl font-bold text-foreground tracking-tighter">{value}</p>
       </div>
     </div>
   );
@@ -76,7 +78,7 @@ function TableSkeleton({ rows = 5, columns = 6 }) {
         <TableRow key={rowIndex}>
           {Array.from({ length: columns }).map((_, colIndex) => (
             <TableCell key={colIndex}>
-              <Skeleton className="h-4 w-full bg-zinc-800" />
+              <Skeleton className="h-4 w-full bg-muted" />
             </TableCell>
           ))}
         </TableRow>
@@ -91,8 +93,8 @@ function TableSkeleton({ rows = 5, columns = 6 }) {
 function EmptyState() {
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center">
-      <div className="p-4 rounded-full bg-zinc-800/50 mb-4">
-        <Users className="h-8 w-8 text-zinc-500" />
+      <div className="p-4 rounded-full bg-muted mb-4 text-muted-foreground">
+        <Users className="h-8 w-8" />
       </div>
       <h3 className="text-lg font-medium text-foreground mb-2">No openings yet</h3>
       <p className="text-sm text-muted-foreground max-w-sm">
@@ -118,7 +120,7 @@ function ErrorState({ message, onRetry }) {
         variant="outline" 
         size="sm" 
         onClick={onRetry}
-        className="border-zinc-700 hover:bg-zinc-800"
+        className="border-border hover:bg-muted"
       >
         <RefreshCw className="h-4 w-4 mr-2" />
         Try again
@@ -146,7 +148,7 @@ function Pagination({ pagination, onPrevPage, onNextPage, hasPrevPage, hasNextPa
           size="sm"
           onClick={onPrevPage}
           disabled={!hasPrevPage}
-          className="h-8 w-8 p-0 hover:bg-zinc-800"
+          className="h-8 w-8 p-0 hover:bg-muted"
         >
           <ChevronLeft className="h-4 w-4" />
         </Button>
@@ -158,7 +160,7 @@ function Pagination({ pagination, onPrevPage, onNextPage, hasPrevPage, hasNextPa
           size="sm"
           onClick={onNextPage}
           disabled={!hasNextPage}
-          className="h-8 w-8 p-0 hover:bg-zinc-800"
+          className="h-8 w-8 p-0 hover:bg-muted"
         >
           <ChevronRight className="h-4 w-4" />
         </Button>
@@ -175,13 +177,13 @@ function ProfileCountCell({ total, recommended, pending }) {
     <div className="flex items-center gap-2">
       <span className="text-foreground tabular-nums">{total}</span>
       {recommended > 0 && (
-        <span className="flex items-center gap-1 text-xs text-emerald-400">
+        <span className="flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400">
           <CheckCircle2 className="h-3 w-3" />
           {recommended}
         </span>
       )}
       {pending > 0 && (
-        <span className="flex items-center gap-1 text-xs text-amber-400">
+        <span className="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400">
           <Clock className="h-3 w-3" />
           {pending}
         </span>
@@ -236,9 +238,9 @@ export default function HMOpeningsListLayout() {
   };
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex min-h-screen bg-background text-foreground selection:bg-foreground selection:text-background">
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-6xl mx-auto p-6">
+        <div className="max-w-7xl mx-auto px-8 py-12">
           {/* Header */}
           <div className="flex items-center justify-between mb-8">
             <div>
@@ -250,11 +252,11 @@ export default function HMOpeningsListLayout() {
               </p>
             </div>
             <Button 
-              variant="ghost" 
+              variant="outline" 
               size="sm" 
               onClick={refresh} 
               disabled={isLoading}
-              className="hover:bg-zinc-800"
+              className="hover:bg-muted text-muted-foreground shadow-sm"
             >
               <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
             </Button>
@@ -290,27 +292,27 @@ export default function HMOpeningsListLayout() {
 
           {/* Search */}
           <div className="mb-6">
-            <div className="relative max-w-xs">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <div className="relative max-w-sm">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-zinc-500" />
               <input
                 type="text"
                 placeholder="Search openings..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 text-sm bg-zinc-900 border border-zinc-800 rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-zinc-600 focus:border-zinc-600 transition-colors"
+                className="w-full pl-10 pr-4 py-3 text-sm bg-background border border-border rounded-none text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground transition-colors"
               />
             </div>
           </div>
 
-          {/* Table */}
-          <div className="border border-border rounded-lg overflow-hidden bg-card">
+          {/* Table Container */}
+          <div className="border border-border rounded-none overflow-hidden bg-card shadow-sm mt-8">
             {error ? (
               <ErrorState message={error} onRetry={refresh} />
             ) : (
               <>
                 <Table>
                   <TableHeader>
-                    <TableRow className="border-b border-zinc-800 hover:bg-transparent">
+                    <TableRow className="border-b border-border bg-muted/50 hover:bg-muted/50">
                       <TableHead className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                         Position
                       </TableHead>
@@ -326,7 +328,7 @@ export default function HMOpeningsListLayout() {
                       <TableHead className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                         Posted
                       </TableHead>
-                      <TableHead className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      <TableHead className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] py-4 px-6">
                         Status
                       </TableHead>
                     </TableRow>
@@ -344,11 +346,11 @@ export default function HMOpeningsListLayout() {
                       filteredOpenings.map((opening) => (
                         <TableRow
                           key={opening.id}
-                          className="cursor-pointer border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-colors"
+                          className="cursor-pointer border-b border-border hover:bg-muted/50 transition-all duration-200 group"
                           onClick={() => handleRowClick(opening.id)}
                         >
-                          <TableCell>
-                            <span className="font-medium text-foreground">
+                          <TableCell className="py-5 px-6">
+                            <span className="font-semibold text-foreground group-hover:text-primary transition-colors">
                               {opening.title}
                             </span>
                           </TableCell>
@@ -375,7 +377,7 @@ export default function HMOpeningsListLayout() {
                             </span>
                           </TableCell>
                           <TableCell>
-                            <span className={`px-2 py-1 text-xs font-medium rounded ${getStatusBadge(opening.status)}`}>
+                            <span className={`px-2 py-0.5 text-[10px] uppercase tracking-widest font-bold rounded-full ${getStatusBadge(opening.status)}`}>
                               {opening.status}
                             </span>
                           </TableCell>

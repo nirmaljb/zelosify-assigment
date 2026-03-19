@@ -25,10 +25,12 @@ export function useOpeningDetail(openingId) {
         `/api/v1/vendor/openings/${openingId}`
       );
 
-      const { opening: openingData, profiles: profilesData } = response.data.data;
+      // Backend returns the opening object directly with profiles nested inside
+      const openingData = response.data.data;
+      const profilesData = openingData?.profiles || [];
 
       setOpening(openingData);
-      setProfiles(profilesData || []);
+      setProfiles(profilesData);
     } catch (err) {
       const errorMessage =
         err.response?.data?.message ||

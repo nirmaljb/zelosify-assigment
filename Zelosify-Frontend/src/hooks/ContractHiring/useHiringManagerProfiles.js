@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import axiosInstance from "@/utils/Auth/axiosInstance";
+import axiosInstance from "@/utils/Axios/AxiosInstance";
 
 /**
  * Hook for fetching profiles for a specific opening with recommendation data.

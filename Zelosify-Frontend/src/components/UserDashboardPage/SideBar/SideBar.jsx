@@ -264,7 +264,7 @@ const Sidebar = memo(({ isOpen, toggleSidebar }) => {
           ref={sidebarRef}
           className={`${
             isOpen ? "w-[12rem]" : "w-[5rem]"
-          } fixed inset-y-0 left-0 z-40 bg-background border-r border-border flex flex-col h-screen`}
+          } fixed inset-y-0 left-0 z-40 bg-background border-r border-border flex flex-col h-screen transition-all duration-300`}
         >
           <SidebarHeader isOpen={isOpen} toggleSidebar={toggleSidebar} />
 
@@ -279,33 +279,33 @@ const Sidebar = memo(({ isOpen, toggleSidebar }) => {
           </div>
 
           {/* Footer Section: Settings & Sign Out */}
-          <div className="px-3 py-4 border-t border-dashed border-gray-200 dark:border-gray-700">
+          <div className="px-3 py-4 border-t border-border">
             <button
               onClick={handleSupportClick}
-              className={`rounded-md flex gap-2 items-center w-full px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition ${
+              className={`rounded-none flex gap-3 items-center w-full px-4 py-3 text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200 ${
                 isOpen ? "justify-start" : "justify-center"
               }`}
             >
-              <supportItem.icon className="h-5 w-5" />
-              {isOpen && <span>{supportItem.title}</span>}
+              <supportItem.icon className="h-4 w-4" />
+              {isOpen && <span className="text-xs font-bold uppercase tracking-widest">{supportItem.title}</span>}
             </button>
             <button
               onClick={handleSettingsClick}
-              className={`rounded-md flex gap-2 items-center w-full px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition ${
+              className={`rounded-none flex gap-3 items-center w-full px-4 py-3 text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200 ${
                 isOpen ? "justify-start" : "justify-center"
               }`}
             >
-              <settingsItem.icon className="h-5 w-5" />
-              {isOpen && <span>{settingsItem.title}</span>}
+              <settingsItem.icon className="h-4 w-4" />
+              {isOpen && <span className="text-xs font-bold uppercase tracking-widest">{settingsItem.title}</span>}
             </button>
             <button
               onClick={handleOpenSignoutConfirmation}
-              className={`rounded-md flex gap-2 items-center w-full px-4 py-2 text-sm cancel-red hover:bg-gray-100 dark:hover:bg-gray-800 transition ${
+              className={`rounded-none flex gap-3 items-center w-full px-4 py-3 text-red-500 hover:bg-red-950/30 transition-all duration-200 ${
                 isOpen ? "justify-start" : "justify-center"
               }`}
             >
-              <signOutItem.icon className="h-5 w-5" />
-              {isOpen && <span>{signOutItem.title}</span>}
+              <signOutItem.icon className="h-4 w-4" />
+              {isOpen && <span className="text-xs font-bold uppercase tracking-widest">{signOutItem.title}</span>}
             </button>
           </div>
         </aside>

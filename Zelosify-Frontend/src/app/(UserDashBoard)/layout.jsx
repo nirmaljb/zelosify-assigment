@@ -50,7 +50,7 @@ export default function UserDashboardlayout({ children }) {
       </div>
 
       {/* main content */}
-      <div className="flex flex-col min-h-screen bg-background">
+      <div className="flex flex-col min-h-screen bg-background text-foreground">
         <SignOutConfirmation
           isOpen={showSignoutConfirmation}
           onCancel={handleCloseSignoutConfirmation}
@@ -65,7 +65,7 @@ export default function UserDashboardlayout({ children }) {
           <main
             className={`relative flex-1 justify-between items-center w-full transition-all duration-300 ${
               isSidebarOpen ? "ml-48" : "ml-20"
-            }`}
+            } bg-background border-l border-border`}
           >
             {children}
           </main>

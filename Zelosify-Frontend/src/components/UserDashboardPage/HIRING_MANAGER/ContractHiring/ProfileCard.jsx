@@ -24,19 +24,21 @@ function getRecommendationBadge(recommended, score) {
     return {
       label: "Processing",
       icon: Clock,
-      bgClass: "bg-zinc-500/10",
-      textClass: "text-zinc-400",
-      borderClass: "border-zinc-500/20",
+      bgClass: "bg-transparent",
+      textClass: "text-muted-foreground",
+      iconClass: "text-muted-foreground",
+      borderClass: "border-border/40",
     };
   }
 
   if (recommended === true || score >= 0.75) {
     return {
-      label: "Recommended",
+      label: "Highly Recommended",
       icon: CheckCircle2,
-      bgClass: "bg-emerald-500/10",
-      textClass: "text-emerald-400",
-      borderClass: "border-emerald-500/20",
+      bgClass: "bg-emerald-500/20",
+      textClass: "text-emerald-500",
+      iconClass: "text-emerald-500",
+      borderClass: "border-transparent",
     };
   }
 
@@ -44,18 +46,20 @@ function getRecommendationBadge(recommended, score) {
     return {
       label: "Borderline",
       icon: AlertCircle,
-      bgClass: "bg-amber-500/10",
-      textClass: "text-amber-400",
-      borderClass: "border-amber-500/20",
+      bgClass: "bg-amber-500/20",
+      textClass: "text-amber-500",
+      iconClass: "text-amber-500",
+      borderClass: "border-transparent",
     };
   }
 
   return {
     label: "Not Recommended",
     icon: XCircle,
-    bgClass: "bg-red-500/10",
-    textClass: "text-red-400",
-    borderClass: "border-red-500/20",
+    bgClass: "bg-red-500/20",
+    textClass: "text-red-500",
+    iconClass: "text-red-500",
+    borderClass: "border-transparent",
   };
 }
 
@@ -64,9 +68,9 @@ function getRecommendationBadge(recommended, score) {
  */
 function getStatusBadge(status) {
   const styles = {
-    SUBMITTED: { label: "Pending", class: "text-zinc-400" },
-    SHORTLISTED: { label: "Shortlisted", class: "text-emerald-400" },
-    REJECTED: { label: "Rejected", class: "text-red-400" },
+    SUBMITTED: { label: "Pending", class: "text-muted-foreground bg-muted px-2 py-0.5 rounded-full" },
+    SHORTLISTED: { label: "Shortlisted", class: "text-emerald-500 bg-emerald-500/20 px-2 py-0.5 rounded-full" },
+    REJECTED: { label: "Rejected", class: "text-red-500 bg-red-500/20 px-2 py-0.5 rounded-full" },
   };
   return styles[status] || styles.SUBMITTED;
 }
@@ -81,9 +85,9 @@ function ScoreRing({ score, size = 48 }) {
   const strokeDashoffset = circumference - (percentage / 100) * circumference;
   
   const getColor = () => {
-    if (percentage >= 75) return "text-emerald-400";
-    if (percentage >= 50) return "text-amber-400";
-    return "text-red-400";
+    if (percentage >= 75) return "text-emerald-600 dark:text-emerald-400";
+    if (percentage >= 50) return "text-amber-600 dark:text-amber-400";
+    return "text-destructive";
   };
 
   return (
@@ -95,9 +99,9 @@ function ScoreRing({ score, size = 48 }) {
           cy={size / 2}
           r={radius}
           stroke="currentColor"
-          strokeWidth="3"
+          strokeWidth="4"
           fill="none"
-          className="text-zinc-800"
+          className="text-zinc-900"
         />
         {/* Progress circle */}
         <circle
@@ -105,9 +109,9 @@ function ScoreRing({ score, size = 48 }) {
           cy={size / 2}
           r={radius}
           stroke="currentColor"
-          strokeWidth="3"
+          strokeWidth="4"
           fill="none"
-          strokeLinecap="round"
+          strokeLinecap="butt"
           className={getColor()}
           style={{
             strokeDasharray: circumference,
@@ -181,13 +185,13 @@ export default function ProfileCard({
   const isActioned = profile.status === "SHORTLISTED" || profile.status === "REJECTED";
 
   return (
-    <div className="group relative bg-card border border-zinc-800 rounded-lg p-4 hover:border-zinc-700 transition-all duration-200">
+    <div className="group relative bg-card border border-border rounded-none p-6 hover:border-foreground/50 hover:shadow-sm transition-all duration-300 selection:bg-foreground selection:text-background">
       {/* Header Row */}
       <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           {/* File icon */}
-          <div className="p-2 rounded-lg bg-zinc-800/50">
-            <FileText className="h-5 w-5 text-zinc-400" />
+          <div className="p-3 rounded-none bg-muted group-hover:bg-accent transition-colors">
+            <FileText className="h-6 w-6 text-muted-foreground group-hover:text-foreground transition-colors" />
           </div>
           
           {/* File info */}
@@ -206,24 +210,24 @@ export default function ProfileCard({
           <ScoreRing score={profile.recommendationScore} />
         )}
         {isProcessing && (
-          <div className="flex items-center gap-2 text-zinc-400">
+          <div className="flex items-center gap-2 text-zinc-500">
             <Loader2 className="h-4 w-4 animate-spin" />
-            <span className="text-xs">Analyzing...</span>
+            <span className="text-xs font-bold uppercase tracking-widest">Analyzing</span>
           </div>
         )}
       </div>
 
       {/* Recommendation Badge */}
-      <div className="flex items-center gap-2 mb-3">
+      <div className="flex items-center gap-3 mb-4">
         <span
-          className={`inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium rounded-md border ${recommendation.bgClass} ${recommendation.textClass} ${recommendation.borderClass}`}
+          className={`inline-flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest rounded-full border ${recommendation.bgClass} ${recommendation.textClass} ${recommendation.borderClass}`}
         >
-          <RecommendationIcon className="h-3 w-3" />
+          <RecommendationIcon className={`h-3 w-3 ${recommendation.iconClass || ""}`} />
           {recommendation.label}
         </span>
         
         {isActioned && (
-          <span className={`text-xs font-medium ${status.class}`}>
+          <span className={`text-[10px] font-bold uppercase tracking-widest ${status.class}`}>
             {status.label}
           </span>
         )}
@@ -264,28 +268,28 @@ export default function ProfileCard({
           <>
             <Button
               size="sm"
-              variant="ghost"
+              variant="outline"
               onClick={() => onShortlist?.(profile.id)}
               disabled={isActionLoading === profile.id}
-              className="flex-1 h-8 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20"
+              className="flex-1 h-10 bg-background hover:bg-foreground hover:text-background border-border hover:border-foreground transition-all duration-300 rounded-none font-bold uppercase tracking-widest text-[10px]"
             >
               {isActionLoading === profile.id ? (
                 <Loader2 className="h-3 w-3 animate-spin" />
               ) : (
                 <>
-                  <ThumbsUp className="h-3 w-3 mr-1.5" />
+                  <ThumbsUp className="h-3.5 w-3.5 mr-2 transition-transform group-hover:scale-110" />
                   Shortlist
                 </>
               )}
             </Button>
             <Button
               size="sm"
-              variant="ghost"
+              variant="outline"
               onClick={() => onReject?.(profile.id)}
               disabled={isActionLoading === profile.id}
-              className="flex-1 h-8 bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-zinc-300 border border-zinc-700"
+              className="flex-1 h-10 bg-background hover:bg-red-600 hover:text-white border-border hover:border-red-600 transition-all duration-300 rounded-none font-bold uppercase tracking-widest text-[10px]"
             >
-              <ThumbsDown className="h-3 w-3 mr-1.5" />
+              <ThumbsDown className="h-3.5 w-3.5 mr-2 transition-transform group-hover:scale-110" />
               Reject
             </Button>
           </>
@@ -296,7 +300,7 @@ export default function ProfileCard({
           variant="ghost"
           onClick={handleDownload}
           disabled={isDownloading}
-          className="h-8 px-2 bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-zinc-300 border border-zinc-700"
+          className="h-10 px-3 bg-background hover:bg-muted border-border transition-colors rounded-none"
         >
           {isDownloading ? (
             <Loader2 className="h-3 w-3 animate-spin" />

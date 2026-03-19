@@ -25,10 +25,10 @@ import ProfileCard from "./ProfileCard";
  */
 function StatsPill({ icon: Icon, label, value, colorClass }) {
   return (
-    <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-800/50 border border-zinc-700/50 ${colorClass}`}>
-      <Icon className="h-3.5 w-3.5" />
-      <span className="text-xs font-medium">{value}</span>
-      <span className="text-xs text-muted-foreground">{label}</span>
+    <div className={`flex items-center gap-3 px-4 py-2 rounded-none bg-card border border-border shadow-sm ${colorClass}`}>
+      <Icon className="h-4 w-4" />
+      <span className="text-sm font-bold tracking-tight">{value}</span>
+      <span className="text-xs text-zinc-500 uppercase tracking-widest">{label}</span>
     </div>
   );
 }
@@ -40,10 +40,10 @@ function FilterChip({ label, isActive, onClick, count }) {
   return (
     <button
       onClick={onClick}
-      className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
+      className={`px-4 py-2 text-xs font-bold uppercase tracking-widest rounded-none border transition-all ${
         isActive
-          ? "bg-violet-500/20 text-violet-300 border-violet-500/30"
-          : "bg-zinc-800/50 text-zinc-400 border-zinc-700 hover:border-zinc-600"
+          ? "bg-foreground text-background border-foreground shadow-sm"
+          : "bg-card text-muted-foreground border-border hover:border-foreground/50 hover:text-foreground"
       }`}
     >
       {label}
@@ -61,7 +61,7 @@ function OpeningInfoCard({ opening }) {
   if (!opening) return null;
 
   return (
-    <div className="bg-card border border-zinc-800 rounded-lg p-4 mb-6">
+    <div className="bg-card border border-border shadow-sm rounded-none p-6 mb-8">
       <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
         <div className="flex items-center gap-2">
           <Briefcase className="h-4 w-4" />
@@ -84,7 +84,7 @@ function OpeningInfoCard({ opening }) {
             {opening.requiredSkills.slice(0, 4).map((skill) => (
               <span
                 key={skill}
-                className="px-2 py-0.5 text-xs bg-zinc-800 rounded border border-zinc-700"
+                className="px-2 py-0.5 text-xs bg-secondary rounded-md border border-border/50 text-secondary-foreground"
               >
                 {skill}
               </span>
@@ -108,23 +108,23 @@ function ProfilesSkeleton({ count = 6 }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="bg-card border border-zinc-800 rounded-lg p-4">
-          <div className="flex items-start justify-between mb-3">
-            <div className="flex items-center gap-3">
-              <Skeleton className="h-10 w-10 rounded-lg bg-zinc-800" />
+        <div key={i} className="bg-card border border-border rounded-none p-6 shadow-sm">
+          <div className="flex items-start justify-between mb-6">
+            <div className="flex items-center gap-4">
+              <Skeleton className="h-12 w-12 rounded-none bg-muted" />
               <div>
-                <Skeleton className="h-4 w-32 bg-zinc-800 mb-1" />
-                <Skeleton className="h-3 w-20 bg-zinc-800" />
+                <Skeleton className="h-5 w-40 bg-muted mb-2" />
+                <Skeleton className="h-3 w-24 bg-muted" />
               </div>
             </div>
-            <Skeleton className="h-12 w-12 rounded-full bg-zinc-800" />
+            <Skeleton className="h-12 w-12 rounded-full bg-muted" />
           </div>
-          <Skeleton className="h-6 w-24 bg-zinc-800 mb-3" />
-          <Skeleton className="h-8 w-full bg-zinc-800 mb-4" />
-          <div className="flex gap-2">
-            <Skeleton className="h-8 flex-1 bg-zinc-800" />
-            <Skeleton className="h-8 flex-1 bg-zinc-800" />
-            <Skeleton className="h-8 w-8 bg-zinc-800" />
+          <Skeleton className="h-6 w-32 bg-muted mb-4" />
+          <Skeleton className="h-10 w-full bg-muted mb-6" />
+          <div className="flex gap-3">
+            <Skeleton className="h-10 flex-1 bg-muted" />
+            <Skeleton className="h-10 flex-1 bg-muted" />
+            <Skeleton className="h-10 w-10 bg-muted" />
           </div>
         </div>
       ))}
@@ -138,8 +138,8 @@ function ProfilesSkeleton({ count = 6 }) {
 function EmptyState({ filter }) {
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center">
-      <div className="p-4 rounded-full bg-zinc-800/50 mb-4">
-        <Users className="h-8 w-8 text-zinc-500" />
+      <div className="p-4 rounded-full bg-muted mb-4 text-muted-foreground">
+        <Users className="h-8 w-8" />
       </div>
       <h3 className="text-lg font-medium text-foreground mb-2">
         {filter === "all" ? "No candidates yet" : `No ${filter} candidates`}
@@ -159,8 +159,8 @@ function EmptyState({ filter }) {
 function ErrorState({ message, onRetry }) {
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center">
-      <div className="p-4 rounded-full bg-red-500/10 mb-4">
-        <AlertCircle className="h-8 w-8 text-red-400" />
+      <div className="p-4 rounded-full bg-destructive/10 mb-4 text-destructive">
+        <AlertCircle className="h-8 w-8" />
       </div>
       <h3 className="text-lg font-medium text-foreground mb-2">Failed to load</h3>
       <p className="text-sm text-muted-foreground mb-4 max-w-sm">{message}</p>
@@ -168,7 +168,7 @@ function ErrorState({ message, onRetry }) {
         variant="outline"
         size="sm"
         onClick={onRetry}
-        className="border-zinc-700 hover:bg-zinc-800"
+        className="border-border hover:bg-muted"
       >
         <RefreshCw className="h-4 w-4 mr-2" />
         Try again
@@ -229,17 +229,17 @@ export default function HMOpeningDetailLayout({ openingId }) {
   };
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex min-h-screen bg-background text-foreground selection:bg-foreground selection:text-background">
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-6xl mx-auto p-6">
+        <div className="max-w-7xl mx-auto px-8 py-12">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-4">
               <Button
-                variant="ghost"
-                size="sm"
+                variant="outline"
+                size="icon"
                 onClick={() => router.push("/hiring-manager/openings")}
-                className="h-8 w-8 p-0 hover:bg-zinc-800"
+                className="h-10 w-10 rounded-none border-border bg-background hover:bg-muted"
               >
                 <ArrowLeft className="h-4 w-4" />
               </Button>
@@ -253,11 +253,11 @@ export default function HMOpeningDetailLayout({ openingId }) {
               </div>
             </div>
             <Button
-              variant="ghost"
-              size="sm"
+              variant="outline"
+              size="icon"
               onClick={refresh}
               disabled={isLoading}
-              className="hover:bg-zinc-800"
+              className="h-10 w-10 border-border bg-background hover:bg-muted shadow-sm"
             >
               <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
             </Button>
@@ -273,31 +273,31 @@ export default function HMOpeningDetailLayout({ openingId }) {
                 icon={Users}
                 label="total"
                 value={stats.total}
-                colorClass="text-zinc-300"
+                colorClass="text-foreground"
               />
               <StatsPill
                 icon={CheckCircle2}
                 label="recommended"
                 value={stats.recommended}
-                colorClass="text-emerald-400"
+                colorClass="text-emerald-600 dark:text-emerald-400"
               />
               <StatsPill
                 icon={AlertCircle}
                 label="borderline"
                 value={stats.borderline}
-                colorClass="text-amber-400"
+                colorClass="text-amber-600 dark:text-amber-400"
               />
               <StatsPill
                 icon={XCircle}
                 label="not recommended"
                 value={stats.notRecommended}
-                colorClass="text-red-400"
+                colorClass="text-destructive font-medium"
               />
               <StatsPill
                 icon={Clock}
                 label="pending"
                 value={stats.pending}
-                colorClass="text-zinc-400"
+                colorClass="text-muted-foreground"
               />
             </div>
           )}
@@ -336,7 +336,7 @@ export default function HMOpeningDetailLayout({ openingId }) {
                 onClick={() => setFilter("pending")}
                 count={stats.pending}
               />
-              <div className="w-px h-4 bg-zinc-700 mx-1" />
+              <div className="w-px h-6 bg-border mx-2" />
               <FilterChip
                 label="Shortlisted"
                 isActive={filter === "shortlisted"}
