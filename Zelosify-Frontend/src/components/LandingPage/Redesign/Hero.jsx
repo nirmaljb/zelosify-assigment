@@ -25,8 +25,8 @@ const Hero = () => {
 
         {/* Heading */}
         <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-white mb-8 leading-tight">
-          Orchestrate your{" "}
-          <span className="text-purple-400">
+          Orchestrate your <br />
+          <span className="text-3xl md:text-4xl text-purple-400 mt-2 inline-block">
             recruitment with AI.
           </span>
         </h1>
