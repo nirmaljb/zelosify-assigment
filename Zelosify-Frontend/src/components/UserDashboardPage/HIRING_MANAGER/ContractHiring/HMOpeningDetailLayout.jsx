@@ -25,7 +25,7 @@ import ProfileCard from "./ProfileCard";
  */
 function StatsPill({ icon: Icon, label, value, colorClass }) {
   return (
-    <div className={`flex items-center gap-3 px-4 py-2 rounded-none bg-card border border-border shadow-sm ${colorClass}`}>
+    <div className={`flex items-center gap-3 px-4 py-2 rounded-lg bg-card border border-border shadow-sm ${colorClass}`}>
       <Icon className="h-4 w-4" />
       <span className="text-sm font-bold tracking-tight">{value}</span>
       <span className="text-xs text-zinc-500 uppercase tracking-widest">{label}</span>
@@ -40,7 +40,7 @@ function FilterChip({ label, isActive, onClick, count }) {
   return (
     <button
       onClick={onClick}
-      className={`px-4 py-2 text-xs font-bold uppercase tracking-widest rounded-none border transition-all ${
+      className={`px-4 py-2 text-xs font-bold uppercase tracking-widest rounded-md border transition-all ${
         isActive
           ? "bg-foreground text-background border-foreground shadow-sm"
           : "bg-card text-muted-foreground border-border hover:border-foreground/50 hover:text-foreground"
@@ -61,7 +61,7 @@ function OpeningInfoCard({ opening }) {
   if (!opening) return null;
 
   return (
-    <div className="bg-card border border-border shadow-sm rounded-none p-6 mb-8">
+    <div className="bg-card border border-border shadow-sm rounded-lg p-6 mb-8">
       <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
         <div className="flex items-center gap-2">
           <Briefcase className="h-4 w-4" />
@@ -108,23 +108,23 @@ function ProfilesSkeleton({ count = 6 }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="bg-card border border-border rounded-none p-6 shadow-sm">
-          <div className="flex items-start justify-between mb-6">
-            <div className="flex items-center gap-4">
-              <Skeleton className="h-12 w-12 rounded-none bg-muted" />
-              <div>
-                <Skeleton className="h-5 w-40 bg-muted mb-2" />
-                <Skeleton className="h-3 w-24 bg-muted" />
-              </div>
+        <div key={i} className="flex flex-col gap-4 p-4 bg-muted/40 border border-border rounded-lg shadow-sm">
+          <div className="flex items-start gap-4">
+            <div className="flex-shrink-0 h-10 w-10 rounded-md bg-background border border-border flex items-center justify-center">
+              <Skeleton className="h-6 w-6 rounded-md bg-muted" />
             </div>
-            <Skeleton className="h-12 w-12 rounded-full bg-muted" />
+            <div className="flex-1">
+              <Skeleton className="h-5 w-3/4 bg-muted mb-2" />
+              <Skeleton className="h-3 w-1/2 bg-muted" />
+            </div>
+            <Skeleton className="h-10 w-10 rounded-md bg-muted" />
           </div>
-          <Skeleton className="h-6 w-32 bg-muted mb-4" />
-          <Skeleton className="h-10 w-full bg-muted mb-6" />
+          <Skeleton className="h-6 w-2/3 bg-muted" />
+          <Skeleton className="h-10 w-full bg-muted" />
           <div className="flex gap-3">
-            <Skeleton className="h-10 flex-1 bg-muted" />
-            <Skeleton className="h-10 flex-1 bg-muted" />
-            <Skeleton className="h-10 w-10 bg-muted" />
+            <Skeleton className="h-10 flex-1 bg-muted rounded-md" />
+            <Skeleton className="h-10 flex-1 bg-muted rounded-md" />
+            <Skeleton className="h-10 w-10 bg-muted rounded-md" />
           </div>
         </div>
       ))}
@@ -194,6 +194,7 @@ export default function HMOpeningDetailLayout({ openingId }) {
     shortlistProfile,
     rejectProfile,
     getDownloadUrl,
+    retryRecommendation,
     refresh,
   } = useHiringManagerProfiles(openingId);
 
@@ -228,6 +229,10 @@ export default function HMOpeningDetailLayout({ openingId }) {
     }
   };
 
+  const handleBackClick = () => {
+    router.push("/hiring-manager/openings");
+  };
+
   return (
     <div className="flex min-h-screen bg-background text-foreground selection:bg-foreground selection:text-background">
       <div className="flex-1 overflow-y-auto">
@@ -238,16 +243,16 @@ export default function HMOpeningDetailLayout({ openingId }) {
               <Button
                 variant="outline"
                 size="icon"
-                onClick={() => router.push("/hiring-manager/openings")}
-                className="h-10 w-10 rounded-none border-border bg-background hover:bg-muted"
+                onClick={handleBackClick}
+                className="h-10 w-10 rounded-md border-border bg-background hover:bg-muted"
               >
                 <ArrowLeft className="h-4 w-4" />
               </Button>
               <div>
-                <h1 className="text-xl font-semibold text-foreground tracking-tight">
+                <h1 className="text-2xl font-bold tracking-tight text-foreground">
                   {opening?.title || "Loading..."}
                 </h1>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-muted-foreground mt-1">
                   Review and manage candidate profiles
                 </p>
               </div>
@@ -257,7 +262,7 @@ export default function HMOpeningDetailLayout({ openingId }) {
               size="icon"
               onClick={refresh}
               disabled={isLoading}
-              className="h-10 w-10 border-border bg-background hover:bg-muted shadow-sm"
+              className="h-10 w-10 rounded-md border-border bg-background hover:bg-muted shadow-sm"
             >
               <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
             </Button>
@@ -271,7 +276,7 @@ export default function HMOpeningDetailLayout({ openingId }) {
             <div className="flex flex-wrap items-center gap-2 mb-6">
               <StatsPill
                 icon={Users}
-                label="total"
+                label="active"
                 value={stats.total}
                 colorClass="text-foreground"
               />
@@ -368,6 +373,7 @@ export default function HMOpeningDetailLayout({ openingId }) {
                   onShortlist={shortlistProfile}
                   onReject={rejectProfile}
                   onDownload={handleDownload}
+                  onRetry={retryRecommendation}
                   isActionLoading={actionLoading}
                 />
               ))}

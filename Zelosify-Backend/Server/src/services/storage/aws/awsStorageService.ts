@@ -15,6 +15,7 @@ dotenv.config();
 
 export class AwsStorageService extends StorageService {
   private s3Client: S3Client;
+  private s3ClientForPresign: S3Client; // Separate client for presigning without checksums
   private bucket: string;
 
   constructor() {
@@ -30,6 +31,7 @@ export class AwsStorageService extends StorageService {
       throw new Error("Missing required AWS S3 configuration");
     }
 
+    // Main client for server-side operations
     this.s3Client = new S3Client({
       region,
       credentials: {
@@ -38,6 +40,21 @@ export class AwsStorageService extends StorageService {
       },
       endpoint: `https://s3.${region}.amazonaws.com`,
       forcePathStyle: true,
+    });
+
+    // Separate client for presigning - configured to not add checksums
+    // requestChecksumCalculation: "WHEN_REQUIRED" prevents automatic checksum addition
+    this.s3ClientForPresign = new S3Client({
+      region,
+      credentials: {
+        accessKeyId,
+        secretAccessKey,
+      },
+      // Use virtual-hosted style for better compatibility with browser uploads
+      forcePathStyle: false,
+      // Disable automatic checksum calculation for presigned URLs
+      requestChecksumCalculation: "WHEN_REQUIRED",
+      responseChecksumValidation: "WHEN_REQUIRED",
     });
 
     this.bucket = bucketName;
@@ -133,22 +150,26 @@ export class AwsStorageService extends StorageService {
     }
   }
 
-  async getUploadURL(key: string): Promise<string> {
+  async getUploadURL(key: string, contentType = "application/pdf"): Promise<string> {
     try {
       console.log("[AWS S3] Generating upload URL for:", {
         bucket: this.bucket,
         key,
+        contentType,
         region: process.env.S3_AWS_REGION,
       });
 
+      // Create command without checksum - browser uploads can't compute checksums easily
       const command = new PutObjectCommand({
         Bucket: this.bucket,
         Key: key,
-        ContentType: "application/pdf",
+        ContentType: contentType,
       });
 
-      const url = await getSignedUrl(this.s3Client, command, {
+      // Use the presign client (no checksums) and minimal signed headers
+      const url = await getSignedUrl(this.s3ClientForPresign, command, {
         expiresIn: 3600,
+        // Only sign host header - content-type will be validated by S3 based on the command
         signableHeaders: new Set(["host"]),
       });
 

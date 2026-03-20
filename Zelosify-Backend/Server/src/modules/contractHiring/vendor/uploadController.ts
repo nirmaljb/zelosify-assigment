@@ -91,7 +91,7 @@ export async function submitProfiles(
       return;
     }
 
-    const { s3Keys } = req.body;
+    const { s3Keys, fileNames } = req.body;
 
     if (!s3Keys || !Array.isArray(s3Keys) || s3Keys.length === 0) {
       res.status(400).json({ error: "s3Keys array required" });
@@ -108,11 +108,17 @@ export async function submitProfiles(
       return;
     }
 
+    // fileNames is optional but should align with s3Keys if provided
+    const validFileNames: string[] | undefined = Array.isArray(fileNames) 
+      ? fileNames.filter((name): name is string => typeof name === "string")
+      : undefined;
+
     const result = await uploadService.submitProfiles(
       tenantId,
       openingId,
       userId,
-      validS3Keys
+      validS3Keys,
+      validFileNames && validFileNames.length > 0 ? validFileNames : undefined
     );
 
     res.status(201).json({

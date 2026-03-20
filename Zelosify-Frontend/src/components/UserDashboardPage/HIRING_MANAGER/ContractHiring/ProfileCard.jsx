@@ -12,9 +12,26 @@ import {
   Loader2,
   FileText,
   Zap,
+  RefreshCw,
+  BookOpen,
 } from "lucide-react";
 import { Button } from "@/components/UI/shadcn/button";
-import { Progress } from "@/components/UI/shadcn/progress";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/UI/shadcn/dialog";
+
+/**
+ * Truncate text to specified length with ellipsis
+ */
+function truncateText(text, maxLength = 30) {
+  if (!text) return "";
+  if (text.length <= maxLength) return text;
+  return text.slice(0, maxLength) + "...";
+}
 
 /**
  * Get recommendation badge based on score and status
@@ -161,9 +178,12 @@ export default function ProfileCard({
   onShortlist,
   onReject,
   onDownload,
+  onRetry,
   isActionLoading,
 }) {
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isRetrying, setIsRetrying] = useState(false);
+  const [isJustificationOpen, setIsJustificationOpen] = useState(false);
 
   const recommendation = getRecommendationBadge(
     profile.recommended,
@@ -181,134 +201,252 @@ export default function ProfileCard({
     }
   };
 
+  const handleRetry = async () => {
+    setIsRetrying(true);
+    try {
+      await onRetry?.(profile.id);
+    } finally {
+      setIsRetrying(false);
+    }
+  };
+
   const isProcessing = profile.recommended === null;
   const isActioned = profile.status === "SHORTLISTED" || profile.status === "REJECTED";
+  const truncatedFileName = truncateText(profile.fileName, 30);
+  const isFileNameTruncated = profile.fileName && profile.fileName.length > 30;
 
   return (
-    <div className="group relative bg-card border border-border rounded-none p-6 hover:border-foreground/50 hover:shadow-sm transition-all duration-300 selection:bg-foreground selection:text-background">
-      {/* Header Row */}
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center gap-4">
-          {/* File icon */}
-          <div className="p-3 rounded-none bg-muted group-hover:bg-accent transition-colors">
-            <FileText className="h-6 w-6 text-muted-foreground group-hover:text-foreground transition-colors" />
+    <>
+      <div className="group relative bg-card border border-border rounded-lg p-6 hover:border-foreground/50 hover:shadow-sm transition-all duration-300 selection:bg-foreground selection:text-background">
+        {/* Header Row */}
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex items-center gap-4">
+            {/* File icon */}
+            <div className="p-3 rounded-md bg-muted group-hover:bg-accent transition-colors">
+              <FileText className="h-6 w-6 text-muted-foreground group-hover:text-foreground transition-colors" />
+            </div>
+            
+            {/* File info */}
+            <div>
+              <h3 
+                className="text-sm font-medium text-foreground max-w-[200px]"
+                title={isFileNameTruncated ? profile.fileName : undefined}
+              >
+                {truncatedFileName}
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                {formatDate(profile.submittedAt)}
+              </p>
+            </div>
           </div>
-          
-          {/* File info */}
-          <div>
-            <h3 className="text-sm font-medium text-foreground truncate max-w-[200px]">
-              {profile.fileName}
-            </h3>
-            <p className="text-xs text-muted-foreground">
-              {formatDate(profile.submittedAt)}
-            </p>
-          </div>
+
+          {/* Score ring */}
+          {!isProcessing && (
+            <ScoreRing score={profile.recommendationScore} />
+          )}
+          {isProcessing && (
+            <div className="flex items-center gap-2 text-zinc-500">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span className="text-xs font-bold uppercase tracking-widest">Analyzing</span>
+            </div>
+          )}
         </div>
 
-        {/* Score ring */}
-        {!isProcessing && (
-          <ScoreRing score={profile.recommendationScore} />
-        )}
-        {isProcessing && (
-          <div className="flex items-center gap-2 text-zinc-500">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            <span className="text-xs font-bold uppercase tracking-widest">Analyzing</span>
-          </div>
-        )}
-      </div>
-
-      {/* Recommendation Badge */}
-      <div className="flex items-center gap-3 mb-4">
-        <span
-          className={`inline-flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest rounded-full border ${recommendation.bgClass} ${recommendation.textClass} ${recommendation.borderClass}`}
-        >
-          <RecommendationIcon className={`h-3 w-3 ${recommendation.iconClass || ""}`} />
-          {recommendation.label}
-        </span>
-        
-        {isActioned && (
-          <span className={`text-[10px] font-bold uppercase tracking-widest ${status.class}`}>
-            {status.label}
+        {/* Recommendation Badge */}
+        <div className="flex items-center gap-3 mb-4">
+          <span
+            className={`inline-flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest rounded-full border ${recommendation.bgClass} ${recommendation.textClass} ${recommendation.borderClass}`}
+          >
+            <RecommendationIcon className={`h-3 w-3 ${recommendation.iconClass || ""}`} />
+            {recommendation.label}
           </span>
-        )}
-      </div>
-
-      {/* AI Explanation */}
-      {profile.recommendationReason && (
-        <p className="text-xs text-muted-foreground mb-3 line-clamp-2">
-          {profile.recommendationReason}
-        </p>
-      )}
-
-      {/* Stats Row */}
-      {!isProcessing && (
-        <div className="flex items-center gap-4 mb-4 text-xs text-muted-foreground">
-          {profile.recommendationConfidence && (
-            <div className="flex items-center gap-1">
-              <span>Confidence:</span>
-              <span className="text-foreground tabular-nums">
-                {Math.round(profile.recommendationConfidence * 100)}%
-              </span>
-            </div>
-          )}
-          {profile.recommendationLatencyMs && (
-            <div className="flex items-center gap-1">
-              <Zap className="h-3 w-3" />
-              <span className="text-foreground tabular-nums">
-                {formatLatency(profile.recommendationLatencyMs)}
-              </span>
-            </div>
+          
+          {isActioned && (
+            <span className={`text-[10px] font-bold uppercase tracking-widest ${status.class}`}>
+              {status.label}
+            </span>
           )}
         </div>
-      )}
 
-      {/* Action Buttons */}
-      <div className="flex items-center gap-2">
-        {!isActioned && !isProcessing && (
-          <>
+        {/* AI Explanation with Read More */}
+        {profile.recommendationReason && (
+          <div className="flex items-start gap-2 mb-3">
+            <p className="text-xs text-muted-foreground line-clamp-2 flex-1">
+              {profile.recommendationReason}
+            </p>
             <Button
+              variant="ghost"
               size="sm"
-              variant="outline"
-              onClick={() => onShortlist?.(profile.id)}
-              disabled={isActionLoading === profile.id}
-              className="flex-1 h-10 bg-background hover:bg-foreground hover:text-background border-border hover:border-foreground transition-all duration-300 rounded-none font-bold uppercase tracking-widest text-[10px]"
+              onClick={() => setIsJustificationOpen(true)}
+              className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground shrink-0"
+              title="Read full justification"
             >
-              {isActionLoading === profile.id ? (
-                <Loader2 className="h-3 w-3 animate-spin" />
-              ) : (
-                <>
-                  <ThumbsUp className="h-3.5 w-3.5 mr-2 transition-transform group-hover:scale-110" />
-                  Shortlist
-                </>
-              )}
+              <BookOpen className="h-3 w-3" />
             </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => onReject?.(profile.id)}
-              disabled={isActionLoading === profile.id}
-              className="flex-1 h-10 bg-background hover:bg-red-600 hover:text-white border-border hover:border-red-600 transition-all duration-300 rounded-none font-bold uppercase tracking-widest text-[10px]"
-            >
-              <ThumbsDown className="h-3.5 w-3.5 mr-2 transition-transform group-hover:scale-110" />
-              Reject
-            </Button>
-          </>
+          </div>
         )}
-        
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={handleDownload}
-          disabled={isDownloading}
-          className="h-10 px-3 bg-background hover:bg-muted border-border transition-colors rounded-none"
-        >
-          {isDownloading ? (
-            <Loader2 className="h-3 w-3 animate-spin" />
-          ) : (
-            <Download className="h-3 w-3" />
+
+        {/* Stats Row */}
+        {!isProcessing && (
+          <div className="flex items-center gap-4 mb-4 text-xs text-muted-foreground">
+            {profile.recommendationConfidence && (
+              <div className="flex items-center gap-1">
+                <span>Confidence:</span>
+                <span className="text-foreground tabular-nums">
+                  {Math.round(profile.recommendationConfidence * 100)}%
+                </span>
+              </div>
+            )}
+            {profile.recommendationLatencyMs && (
+              <div className="flex items-center gap-1">
+                <Zap className="h-3 w-3" />
+                <span className="text-foreground tabular-nums">
+                  {formatLatency(profile.recommendationLatencyMs)}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Action Buttons */}
+        <div className="flex items-center gap-2">
+          {/* Retry button - always visible per user preference */}
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleRetry}
+            disabled={isRetrying || isActionLoading === profile.id}
+            className="h-10 px-3 bg-background hover:bg-muted border-border transition-colors rounded-md"
+            title="Retry AI recommendation"
+          >
+            {isRetrying ? (
+              <Loader2 className="h-3 w-3 animate-spin" />
+            ) : (
+              <RefreshCw className="h-3 w-3" />
+            )}
+          </Button>
+
+          {!isActioned && !isProcessing && (
+            <>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => onShortlist?.(profile.id)}
+                disabled={isActionLoading === profile.id}
+                className="flex-1 h-10 bg-background hover:bg-foreground hover:text-background border-border hover:border-foreground transition-all duration-300 rounded-md font-bold uppercase tracking-widest text-[10px]"
+              >
+                {isActionLoading === profile.id ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <>
+                    <ThumbsUp className="h-3.5 w-3.5 mr-2 transition-transform group-hover:scale-110" />
+                    Shortlist
+                  </>
+                )}
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => onReject?.(profile.id)}
+                disabled={isActionLoading === profile.id}
+                className="flex-1 h-10 bg-background hover:bg-red-600 hover:text-white border-border hover:border-red-600 transition-all duration-300 rounded-md font-bold uppercase tracking-widest text-[10px]"
+              >
+                <ThumbsDown className="h-3.5 w-3.5 mr-2 transition-transform group-hover:scale-110" />
+                Reject
+              </Button>
+            </>
           )}
-        </Button>
+          
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={handleDownload}
+            disabled={isDownloading}
+            className="h-10 px-3 bg-background hover:bg-muted border-border transition-colors rounded-md"
+            title="Download resume"
+          >
+            {isDownloading ? (
+              <Loader2 className="h-3 w-3 animate-spin" />
+            ) : (
+              <Download className="h-3 w-3" />
+            )}
+          </Button>
+        </div>
       </div>
-    </div>
+
+      {/* Justification Modal */}
+      <Dialog open={isJustificationOpen} onOpenChange={setIsJustificationOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <BookOpen className="h-5 w-5 text-muted-foreground" />
+              AI Recommendation Details
+            </DialogTitle>
+            <DialogDescription>
+              Full justification for the recommendation decision
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 mt-4">
+            {/* File info */}
+            <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
+              <FileText className="h-5 w-5 text-muted-foreground" />
+              <div>
+                <p className="text-sm font-medium text-foreground">{profile.fileName}</p>
+                <p className="text-xs text-muted-foreground">{formatDate(profile.submittedAt)}</p>
+              </div>
+            </div>
+
+            {/* Score and confidence */}
+            {!isProcessing && (
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">Score:</span>
+                  <span className="text-sm font-semibold text-foreground">
+                    {Math.round((profile.recommendationScore || 0) * 100)}%
+                  </span>
+                </div>
+                {profile.recommendationConfidence && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">Confidence:</span>
+                    <span className="text-sm font-semibold text-foreground">
+                      {Math.round(profile.recommendationConfidence * 100)}%
+                    </span>
+                  </div>
+                )}
+                {profile.recommendationLatencyMs && (
+                  <div className="flex items-center gap-2">
+                    <Zap className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm text-foreground">
+                      {formatLatency(profile.recommendationLatencyMs)}
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Recommendation badge */}
+            <div>
+              <span
+                className={`inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold uppercase tracking-widest rounded-full border ${recommendation.bgClass} ${recommendation.textClass} ${recommendation.borderClass}`}
+              >
+                <RecommendationIcon className={`h-3.5 w-3.5 ${recommendation.iconClass || ""}`} />
+                {recommendation.label}
+              </span>
+            </div>
+
+            {/* Full justification text */}
+            <div>
+              <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">
+                Justification
+              </h4>
+              <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
+                {profile.recommendationReason || "No justification available."}
+              </p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

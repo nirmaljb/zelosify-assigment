@@ -38,7 +38,11 @@ export async function findOpeningsByHiringManager(
       },
       include: {
         _count: {
-          select: { hiringProfiles: true },
+          select: { 
+            hiringProfiles: {
+              where: { isDeleted: false },
+            },
+          },
         },
         hiringProfiles: {
           where: { isDeleted: false },
@@ -49,7 +53,7 @@ export async function findOpeningsByHiringManager(
           },
         },
       },
-      orderBy: { postedAt: "desc" },
+      orderBy: { postedDate: "desc" },
       skip,
       take: limit,
     }),
@@ -132,7 +136,7 @@ export async function shortlistProfile(profileId: number): Promise<hiringProfile
       where: { id: profileId },
       data: {
         status: "SHORTLISTED",
-        updatedAt: new Date(),
+        // updatedAt is handled automatically by Prisma @updatedAt
       },
     });
   });
@@ -148,7 +152,7 @@ export async function rejectProfile(profileId: number): Promise<hiringProfile> {
       where: { id: profileId },
       data: {
         status: "REJECTED",
-        updatedAt: new Date(),
+        // updatedAt is handled automatically by Prisma @updatedAt
       },
     });
   });

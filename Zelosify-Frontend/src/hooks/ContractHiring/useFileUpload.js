@@ -10,6 +10,14 @@ const ALLOWED_FILE_TYPES = [
 
 const ALLOWED_EXTENSIONS = [".pdf", ".pptx"];
 
+// File constraints (matching backend limits)
+export const FILE_CONSTRAINTS = {
+  maxFileSize: 10 * 1024 * 1024, // 10MB per file
+  maxFiles: 10, // Max 10 files at once
+  allowedExtensions: ALLOWED_EXTENSIONS,
+  allowedTypes: ALLOWED_FILE_TYPES,
+};
+
 /**
  * Validate file type
  */
@@ -19,6 +27,13 @@ function isValidFileType(file) {
     ALLOWED_FILE_TYPES.includes(file.type) ||
     ALLOWED_EXTENSIONS.includes(extension)
   );
+}
+
+/**
+ * Validate file size
+ */
+function isValidFileSize(file) {
+  return file.size <= FILE_CONSTRAINTS.maxFileSize;
 }
 
 /**
@@ -48,29 +63,57 @@ export function useFileUpload(openingId, onUploadComplete) {
   const addFiles = useCallback((newFiles) => {
     const validFiles = [];
     const invalidFiles = [];
+    const oversizedFiles = [];
 
-    Array.from(newFiles).forEach((file) => {
-      if (isValidFileType(file)) {
-        validFiles.push({
-          file,
-          id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          status: "pending",
-          progress: 0,
-          error: null,
-          s3Key: null,
-        });
-      } else {
-        invalidFiles.push(file.name);
+    // Calculate how many more files we can accept
+    const currentCount = files.length;
+    const remainingSlots = FILE_CONSTRAINTS.maxFiles - currentCount;
+
+    Array.from(newFiles).forEach((file, index) => {
+      // Check if we've hit the file limit
+      if (validFiles.length >= remainingSlots) {
+        invalidFiles.push(`${file.name} (max ${FILE_CONSTRAINTS.maxFiles} files)`);
+        return;
       }
+
+      // Validate file type
+      if (!isValidFileType(file)) {
+        invalidFiles.push(file.name);
+        return;
+      }
+
+      // Validate file size
+      if (!isValidFileSize(file)) {
+        const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
+        oversizedFiles.push(`${file.name} (${sizeMB}MB)`);
+        return;
+      }
+
+      validFiles.push({
+        file,
+        id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        status: "pending",
+        progress: 0,
+        error: null,
+        s3Key: null,
+      });
     });
 
     if (invalidFiles.length > 0) {
       console.warn("Invalid file types:", invalidFiles);
     }
 
+    if (oversizedFiles.length > 0) {
+      console.warn("Oversized files:", oversizedFiles);
+    }
+
     setFiles((prev) => [...prev, ...validFiles]);
-    return { validCount: validFiles.length, invalidFiles };
-  }, []);
+    return { 
+      validCount: validFiles.length, 
+      invalidFiles,
+      oversizedFiles,
+    };
+  }, [files.length]);
 
   /**
    * Remove a file from the upload queue

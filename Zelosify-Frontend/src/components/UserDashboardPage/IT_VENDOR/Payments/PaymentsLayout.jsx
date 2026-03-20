@@ -129,14 +129,14 @@ export default function PaymentsLayout() {
       <div className={`flex-1 overflow-y-auto transition-all duration-300`}>
         <div className="max-w-7xl mx-auto px-8 py-12">
           {/* Header */}
-          <div className="flex justify-between items-center mb-10">
-            <h1 className="text-4xl font-bold tracking-tighter text-foreground">Payments</h1>
+          <div className="flex justify-between items-center mb-8">
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">Payments</h1>
             {!isSidebarVisible && (
               <Button
                 variant="outline"
                 size="icon"
                 onClick={() => setIsSidebarVisible(true)}
-                className="rounded-none border-border bg-background hover:bg-muted"
+                className="rounded-md border-border bg-background hover:bg-muted"
               >
                 <ArrowLeft className="h-4 w-4" />
               </Button>
@@ -145,7 +145,7 @@ export default function PaymentsLayout() {
 
           {/* Filter and Search */}
           <div className="flex items-center justify-between gap-4 mb-8">
-            <button className="px-6 py-3 bg-foreground text-background text-[10px] font-bold uppercase tracking-widest rounded-none hover:bg-muted-foreground transition-colors flex items-center gap-2">
+            <button className="px-6 py-3 bg-foreground text-background text-[10px] font-bold uppercase tracking-widest rounded-md hover:bg-muted-foreground transition-colors flex items-center gap-2">
               Filter
               <Filter className="w-3.5 h-3.5" />
             </button>
@@ -155,13 +155,13 @@ export default function PaymentsLayout() {
               <input
                 type="text"
                 placeholder="Search transactions..."
-                className="w-full pl-10 pr-4 py-3 text-sm border border-border rounded-none bg-background text-foreground focus:outline-none focus:border-foreground transition-colors placeholder:text-muted-foreground"
+                className="w-full pl-10 pr-4 py-3 text-sm border border-border rounded-md bg-background text-foreground focus:outline-none focus:border-foreground transition-colors placeholder:text-muted-foreground"
               />
             </div>
           </div>
 
           {/* Table */}
-          <div className="border border-border rounded-none overflow-hidden bg-card shadow-sm">
+          <div className="border border-border rounded-lg overflow-hidden bg-card shadow-sm">
             <table className="min-w-full divide-y divide-border">
               <thead className="bg-muted/50">
                 <tr className="border-b border-border">
@@ -173,25 +173,25 @@ export default function PaymentsLayout() {
                       onChange={handleSelectAll}
                     />
                   </th>
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                  <th className="px-4 py-3 text-left text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                     Contract No.
                   </th>
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                  <th className="px-4 py-3 text-left text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                     Vendor name
                   </th>
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                  <th className="px-4 py-3 text-left text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                     Type
                   </th>
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                  <th className="px-4 py-3 text-left text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                     Status
                   </th>
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                  <th className="px-4 py-3 text-left text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                     Total
                   </th>
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                  <th className="px-4 py-3 text-left text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                     Date
                   </th>
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                  <th className="px-4 py-3 text-left text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                     Approver
                   </th>
                 </tr>

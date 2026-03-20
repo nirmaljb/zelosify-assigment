@@ -71,22 +71,22 @@ const Header = memo(({ isSidebarOpen }) => {
         </div> */}
 
         <div className="flex items-center gap-2">
-          {/* Toggle Theme Button */}
           <label className="relative inline-flex items-center cursor-pointer">
             <input
               type="checkbox"
               className="sr-only peer"
-              checked={currentTheme === "dark"} //  Ensure correct theme detection
+              checked={currentTheme === "dark"}
               onChange={() =>
                 setTheme(currentTheme === "dark" ? "light" : "dark")
               }
             />
-            <div className="w-10 h-5 bg-zinc-900 border border-zinc-800 rounded-full peer peer-checked:after:translate-x-5 rtl:peer-checked:after:-translate-x-5 after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-white after:shadow-sm">
-              {currentTheme === "dark" ? (
-                <Moon className="absolute left-1 top-1/2 transform -translate-y-1/2 h-3 w-3 text-white peer-checked:text-black z-10" />
-              ) : (
-                <Sun className="absolute right-1 top-1/2 transform -translate-y-1/2 h-3 w-3 text-black z-10" />
-              )}
+            <div className="w-11 h-6 bg-muted border border-border rounded-full peer peer-checked:after:translate-x-5 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-background after:border after:border-border after:rounded-full after:h-5 after:w-5 after:transition-all after:shadow-sm">
+              <span className="absolute left-1.5 top-1/2 transform -translate-y-1/2 z-10 flex items-center justify-center">
+                <Moon className={`h-3 w-3 transition-opacity ${currentTheme === "dark" ? "opacity-100 text-muted-foreground" : "opacity-0"}`} />
+              </span>
+              <span className="absolute right-1.5 top-1/2 transform -translate-y-1/2 z-10 flex items-center justify-center">
+                <Sun className={`h-3 w-3 transition-opacity ${currentTheme === "light" ? "opacity-100 text-muted-foreground" : "opacity-0"}`} />
+              </span>
             </div>
           </label>
 

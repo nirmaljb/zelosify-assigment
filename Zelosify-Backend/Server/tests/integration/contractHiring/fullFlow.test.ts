@@ -72,7 +72,7 @@ const mockProfile = {
   recommended: true,
   recommendationScore: 0.85,
   recommendationConfidence: 0.9,
-  recommendationExplanation: "Strong skill match (90%), experience within range.",
+  recommendationReason: "Strong skill match (90%), experience within range.",
   recommendedAt: new Date(),
   recommendationLatencyMs: 1200,
   recommendationVersion: "1.0.0",
@@ -270,7 +270,7 @@ describe("Contract Hiring Integration Flow", () => {
       expect(profiles[0].recommended).toBe(true);
       expect(profiles[0].recommendationScore).toBe(0.85);
       expect(profiles[0].recommendationConfidence).toBe(0.9);
-      expect(profiles[0].recommendationExplanation).toContain("Strong skill match");
+      expect(profiles[0].recommendationReason).toContain("Strong skill match");
       expect(profiles[0].recommendationLatencyMs).toBe(1200);
     });
 
@@ -292,7 +292,7 @@ describe("Contract Hiring Integration Flow", () => {
       expect((vendorView as any).recommended).toBeUndefined();
       expect((vendorView as any).recommendationScore).toBeUndefined();
       expect((vendorView as any).recommendationConfidence).toBeUndefined();
-      expect((vendorView as any).recommendationExplanation).toBeUndefined();
+      expect((vendorView as any).recommendationReason).toBeUndefined();
     });
   });
 
@@ -336,7 +336,7 @@ describe("Contract Hiring Integration Flow", () => {
         ...mockProfile,
         recommended: null,
         recommendationScore: null,
-        recommendationExplanation: null,
+        recommendationReason: null,
       };
       (prisma.hiringProfile.create as any).mockResolvedValue(submittedProfile);
       
@@ -360,7 +360,7 @@ describe("Contract Hiring Integration Flow", () => {
           recommended: true,
           recommendationScore: 0.85,
           recommendationConfidence: 0.9,
-          recommendationExplanation: "Strong skill match",
+          recommendationReason: "Strong skill match",
           recommendationLatencyMs: 1200,
         },
       });

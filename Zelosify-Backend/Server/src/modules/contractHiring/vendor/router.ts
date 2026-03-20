@@ -6,13 +6,35 @@
  */
 
 import { Router, type RequestHandler } from "express";
+import multer from "multer";
 import { authenticateUser } from "../../../middlewares/auth/authenticateMiddleware.js";
 import { authorizeRole } from "../../../middlewares/auth/authorizeMiddleware.js";
 import * as vendorController from "./controller.js";
 import * as uploadController from "./uploadController.js";
 import * as previewController from "./previewController.js";
+import * as directUploadController from "./directUploadController.js";
 
 const router = Router();
+
+// Configure multer for memory storage (files stay in memory before S3 upload)
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit per file
+    files: 10, // Max 10 files at once
+  },
+  fileFilter: (_req, file, cb) => {
+    const allowedMimes = [
+      "application/pdf",
+      "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    ];
+    if (allowedMimes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error("Only PDF and PPTX files are allowed"));
+    }
+  },
+});
 
 // Apply authentication and IT_VENDOR authorization to all routes
 const authMiddleware: RequestHandler[] = [
@@ -78,6 +100,24 @@ router.post(
   (async (req, res, next) => {
     try {
       await uploadController.submitProfiles(req as any, res);
+    } catch (error) {
+      next(error);
+    }
+  }) as RequestHandler
+);
+
+/**
+ * POST /openings/:id/profiles/direct-upload
+ * Upload files directly through backend to S3 (bypasses CORS)
+ * Accepts multipart form data with 'files' field
+ */
+router.post(
+  "/openings/:id/profiles/direct-upload",
+  ...authMiddleware,
+  upload.array("files", 10),
+  (async (req, res, next) => {
+    try {
+      await directUploadController.directUpload(req as any, res);
     } catch (error) {
       next(error);
     }

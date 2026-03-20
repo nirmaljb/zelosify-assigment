@@ -1,12 +1,12 @@
 import {
   LogOut,
   Settings,
-  CreditCard,
   Headset,
   Smile,
   Scale3DIcon,
   Frown,
   Briefcase,
+  CreditCard,
 } from "lucide-react";
 import { MdDataUsage } from "react-icons/md";
 
@@ -43,14 +43,26 @@ const getOverviewItemsByRole = (role) => {
     // For IT_VENDOR
     case "IT_VENDOR":
       return [
-        { title: "Contract Openings", href: "/vendor/openings", icon: Briefcase },
-        { title: "Payments", href: "/vendor/payments", icon: CreditCard },
+        {
+          title: "Contract Openings",
+          href: "/vendor/openings",
+          icon: Briefcase,
+        },
+        {
+          title: "Payments",
+          href: "/vendor/payments",
+          icon: CreditCard,
+        },
       ];
 
     // For HIRING_MANAGER
     case "HIRING_MANAGER":
       return [
-        { title: "My Openings", href: "/hiring-manager/openings", icon: Briefcase },
+        {
+          title: "My Openings",
+          href: "/hiring-manager/openings",
+          icon: Briefcase,
+        },
       ];
 
     default:

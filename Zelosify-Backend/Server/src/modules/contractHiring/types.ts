@@ -134,6 +134,7 @@ export interface PresignResponse {
 
 export interface ProfileUploadRequest {
   s3Keys: string[];
+  fileNames?: string[];  // Original file names, parallel to s3Keys
 }
 
 export interface ProfileUploadResult {
@@ -203,7 +204,7 @@ export function toVendorProfileItem(profile: hiringProfile): VendorProfileItem {
   return {
     id: profile.id,
     s3Key: profile.s3Key,
-    fileName: extractFileName(profile.s3Key),
+    fileName: profile.originalFileName || extractFileName(profile.s3Key),
     submittedAt: profile.submittedAt,
     status: profile.status,
     uploadedBy: profile.uploadedBy,
@@ -217,7 +218,7 @@ export function toHiringManagerProfileItem(profile: hiringProfile): HiringManage
   return {
     id: profile.id,
     s3Key: profile.s3Key,
-    fileName: extractFileName(profile.s3Key),
+    fileName: profile.originalFileName || extractFileName(profile.s3Key),
     submittedAt: profile.submittedAt,
     status: profile.status,
     uploadedBy: profile.uploadedBy,

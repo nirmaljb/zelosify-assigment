@@ -2,11 +2,27 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axiosInstance from "@/utils/Axios/AxiosInstance";
 import { clearAuthData } from "@/utils/Auth/authUtils";
 
+const isBrowserStorageAvailable = () => {
+  return (
+    typeof window !== "undefined" &&
+    typeof window.localStorage !== "undefined" &&
+    typeof window.localStorage.getItem === "function" &&
+    typeof window.localStorage.setItem === "function" &&
+    typeof window.localStorage.removeItem === "function"
+  );
+};
+
+const isProtectedAppPath = (pathname = "") => {
+  return ["/user", "/vendor", "/hiring-manager", "/business-user"].some(
+    (prefix) => pathname.startsWith(prefix)
+  );
+};
+
 // Helper functions for localStorage
 const loadUserFromStorage = () => {
-  if (typeof window === "undefined") return null; // Handle SSR
+  if (!isBrowserStorageAvailable()) return null;
   try {
-    const storedUser = localStorage.getItem("zelosify_user");
+    const storedUser = window.localStorage.getItem("zelosify_user");
     return storedUser ? JSON.parse(storedUser) : null;
   } catch (error) {
     console.error("Error loading user from localStorage:", error);
@@ -15,12 +31,12 @@ const loadUserFromStorage = () => {
 };
 
 const saveUserToStorage = (user) => {
-  if (typeof window === "undefined") return; // Handle SSR
+  if (!isBrowserStorageAvailable()) return;
   try {
     if (user) {
-      localStorage.setItem("zelosify_user", JSON.stringify(user));
+      window.localStorage.setItem("zelosify_user", JSON.stringify(user));
     } else {
-      localStorage.removeItem("zelosify_user");
+      window.localStorage.removeItem("zelosify_user");
     }
   } catch (error) {
     console.error("Error saving user to localStorage:", error);
@@ -48,8 +64,8 @@ export const checkAuthStatus = createAsyncThunk(
     } = options;
 
     try {
-      // Skip auth check on auth pages completely
-      if (isAuthPage || !pathname.includes("/user")) {
+      // Skip auth check on auth/public pages completely
+      if (isAuthPage || !isProtectedAppPath(pathname)) {
         return null;
       }
 

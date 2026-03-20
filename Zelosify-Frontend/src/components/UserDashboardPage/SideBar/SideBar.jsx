@@ -24,8 +24,6 @@ import {
 } from "./components/SideBarMenuSub";
 import {
   getSidebarSectionsByRole,
-  settingsItem,
-  supportItem,
   signOutItem,
 } from "./Routes/ItemRoutes";
 
@@ -144,15 +142,6 @@ const Sidebar = memo(({ isOpen, toggleSidebar }) => {
     }),
     [isOpen, toggleSidebar, expandedItems, toggleSubmenu]
   );
-
-  // Memoize handlers for footer buttons
-  const handleSupportClick = useCallback(() => {
-    router.push(supportItem.href);
-  }, [router]);
-
-  const handleSettingsClick = useCallback(() => {
-    router.push(settingsItem.href);
-  }, [router]);
 
   // Memoize the menu item click handler
   const createMenuItemClickHandler = useCallback(
@@ -278,29 +267,11 @@ const Sidebar = memo(({ isOpen, toggleSidebar }) => {
             </div>
           </div>
 
-          {/* Footer Section: Settings & Sign Out */}
+          {/* Footer Section */}
           <div className="px-3 py-4 border-t border-border">
             <button
-              onClick={handleSupportClick}
-              className={`rounded-none flex gap-3 items-center w-full px-4 py-3 text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200 ${
-                isOpen ? "justify-start" : "justify-center"
-              }`}
-            >
-              <supportItem.icon className="h-4 w-4" />
-              {isOpen && <span className="text-xs font-bold uppercase tracking-widest">{supportItem.title}</span>}
-            </button>
-            <button
-              onClick={handleSettingsClick}
-              className={`rounded-none flex gap-3 items-center w-full px-4 py-3 text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200 ${
-                isOpen ? "justify-start" : "justify-center"
-              }`}
-            >
-              <settingsItem.icon className="h-4 w-4" />
-              {isOpen && <span className="text-xs font-bold uppercase tracking-widest">{settingsItem.title}</span>}
-            </button>
-            <button
               onClick={handleOpenSignoutConfirmation}
-              className={`rounded-none flex gap-3 items-center w-full px-4 py-3 text-red-500 hover:bg-red-950/30 transition-all duration-200 ${
+              className={`flex gap-3 items-center w-full px-4 py-3 text-red-500 hover:bg-red-950/30 transition-all duration-200 rounded-md ${
                 isOpen ? "justify-start" : "justify-center"
               }`}
             >

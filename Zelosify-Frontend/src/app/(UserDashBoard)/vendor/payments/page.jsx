@@ -1,9 +1,5 @@
-import PaymentsLayout from "@/components/UserDashboardPage/IT_VENDOR/Payments/PaymentsLayout";
+import { redirect } from "next/navigation";
 
 export default function PaymentsPage() {
-  return (
-    <div className="w-full">
-      <PaymentsLayout />
-    </div>
-  );
+  redirect("/vendor/openings");
 }

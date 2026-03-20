@@ -86,7 +86,8 @@ export async function submitProfiles(
   tenantId: string,
   openingId: string,
   vendorUserId: string,
-  s3Keys: string[]
+  s3Keys: string[],
+  fileNames?: string[]
 ): Promise<ProfileUploadResult> {
   // Verify opening exists and belongs to tenant
   const hasAccess = await repository.verifyOpeningAccess(openingId, tenantId);
@@ -95,15 +96,19 @@ export async function submitProfiles(
   }
 
   // Filter out any s3Keys that already exist (idempotency)
-  const newS3Keys: string[] = [];
-  for (const s3Key of s3Keys) {
+  const newProfiles: Array<{ s3Key: string; fileName?: string }> = [];
+  for (let i = 0; i < s3Keys.length; i++) {
+    const s3Key = s3Keys[i];
     const exists = await repository.profileExistsByS3Key(s3Key);
     if (!exists) {
-      newS3Keys.push(s3Key);
+      newProfiles.push({
+        s3Key,
+        fileName: fileNames?.[i],
+      });
     }
   }
 
-  if (newS3Keys.length === 0) {
+  if (newProfiles.length === 0) {
     return {
       created: 0,
       profiles: [],
@@ -111,9 +116,10 @@ export async function submitProfiles(
   }
 
   // Create profile records
-  const profileData = newS3Keys.map((s3Key) => ({
+  const profileData = newProfiles.map((p) => ({
     openingId,
-    s3Key,
+    s3Key: p.s3Key,
+    originalFileName: p.fileName || null,
     uploadedBy: vendorUserId,
     status: "SUBMITTED" as const,
   }));

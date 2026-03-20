@@ -3,21 +3,36 @@
  * 
  * Parses PDF and PPTX resume files from S3 and extracts structured data.
  * This is a callable tool in the agent flow.
+ * 
+ * Includes prompt injection validation per spec requirements.
  */
 
-import type { ParsedResume } from "../types.js";
-import { sanitizeForLLM } from "./sanitizer.js";
+import type { ParsedResume, InjectionValidationResult } from "../types.js";
+import { sanitizeForLLM, validateAndSanitize, PromptInjectionValidator } from "./sanitizer.js";
 
 // PDF parsing - using pdf-parse compatible approach
 // PPTX parsing - basic text extraction
 
 /**
+ * Extended parsed resume with injection validation metadata
+ */
+export interface ParsedResumeWithValidation extends ParsedResume {
+  injectionValidation: {
+    safe: boolean;
+    flagsCount: number;
+    highestSeverity: string | null;
+    flagsByCategory: Record<string, number>;
+  };
+}
+
+/**
  * Parse a resume file and extract structured data
+ * Includes prompt injection validation and logging
  */
 export async function parseResume(
   fileBuffer: Buffer,
   fileName: string
-): Promise<ParsedResume> {
+): Promise<ParsedResumeWithValidation> {
   const extension = fileName.toLowerCase().split(".").pop();
   
   let rawText: string;
@@ -30,11 +45,71 @@ export async function parseResume(
     throw new Error(`Unsupported file type: ${extension}`);
   }
 
-  // Sanitize text for LLM usage (prompt injection mitigation)
-  const sanitizedText = sanitizeForLLM(rawText);
+  // Validate for prompt injection attempts BEFORE sanitization
+  const validationResult = validateAndSanitize(rawText);
   
-  // Extract structured data from text
-  return extractStructuredData(sanitizedText);
+  // Log injection validation result (structured JSON per spec)
+  logInjectionValidation(fileName, validationResult);
+  
+  // Use sanitized text for extraction
+  const sanitizedText = validationResult.sanitizedText;
+  
+  // Extract structured data from sanitized text
+  const parsed = extractStructuredData(sanitizedText);
+  
+  // Return with validation metadata
+  return {
+    ...parsed,
+    injectionValidation: {
+      safe: validationResult.safe,
+      flagsCount: validationResult.totalFlagsCount,
+      highestSeverity: validationResult.highestSeverity,
+      flagsByCategory: validationResult.flagsByCategory as Record<string, number>,
+    },
+  };
+}
+
+/**
+ * Log injection validation result in structured JSON format
+ */
+function logInjectionValidation(fileName: string, result: InjectionValidationResult): void {
+  const logEntry = {
+    timestamp: new Date().toISOString(),
+    event: "injection_validation",
+    fileName,
+    safe: result.safe,
+    totalFlags: result.totalFlagsCount,
+    highestSeverity: result.highestSeverity,
+    flagsBySeverity: result.flagsBySeverity,
+    flagsByCategory: result.flagsByCategory,
+    originalLength: result.originalLength,
+    sanitizedLength: result.sanitizedLength,
+    // Include detailed flags for HIGH/CRITICAL only (for security review)
+    criticalFlags: result.flags
+      .filter(f => f.severity === "CRITICAL" || f.severity === "HIGH")
+      .map(f => ({
+        category: f.category,
+        severity: f.severity,
+        description: f.description,
+        position: f.position,
+        // Don't log matched text for security (could contain sensitive data)
+      })),
+  };
+  
+  // Always log injection validation for auditing
+  console.log(JSON.stringify(logEntry));
+  
+  // Additional warning log for unsafe content
+  if (!result.safe) {
+    console.log(JSON.stringify({
+      timestamp: new Date().toISOString(),
+      event: "injection_warning",
+      level: "WARN",
+      fileName,
+      message: `Potential prompt injection detected (severity: ${result.highestSeverity})`,
+      flagCount: result.totalFlagsCount,
+    }));
+  }
 }
 
 /**
@@ -42,9 +117,9 @@ export async function parseResume(
  */
 async function parsePDF(buffer: Buffer): Promise<string> {
   try {
-    // Dynamic import to handle ESM/CJS compatibility
-    const pdfParse = await import("pdf-parse/lib/pdf-parse.js");
-    const data = await pdfParse.default(buffer);
+    // Import from lib path to avoid test file loading bug in pdf-parse index.js
+    const pdfParse = (await import("pdf-parse/lib/pdf-parse.js")).default;
+    const data = await pdfParse(buffer);
     return data.text || "";
   } catch (error) {
     console.error("PDF parsing error:", error);

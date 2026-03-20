@@ -105,12 +105,51 @@ export default function useHiringManagerProfiles(openingId) {
   const getDownloadUrl = useCallback(async (profileId) => {
     try {
       const response = await axiosInstance.get(
-        `/api/v1/vendor/profiles/${profileId}/download-url`
+        `/api/v1/hiring-manager/profiles/${profileId}/download-url`
       );
-      return response.data.downloadUrl;
+      return response.data.data.downloadUrl;
     } catch (err) {
       console.error("Error getting download URL:", err);
       return null;
+    }
+  }, []);
+
+  /**
+   * Retry AI recommendation for a profile
+   */
+  const retryRecommendation = useCallback(async (profileId) => {
+    setActionLoading(profileId);
+    
+    try {
+      await axiosInstance.post(
+        `/api/v1/hiring-manager/profiles/${profileId}/retry-recommendation`
+      );
+      
+      // Update local state to show processing
+      setProfiles((prev) =>
+        prev.map((p) =>
+          p.id === profileId
+            ? {
+                ...p,
+                recommended: null,
+                recommendationScore: null,
+                recommendationConfidence: null,
+                recommendationReason: null,
+                recommendationLatencyMs: null,
+              }
+            : p
+        )
+      );
+      
+      return { success: true };
+    } catch (err) {
+      console.error("Error retrying recommendation:", err);
+      return {
+        success: false,
+        error: err.response?.data?.error || "Failed to retry recommendation",
+      };
+    } finally {
+      setActionLoading(null);
     }
   }, []);
 
@@ -135,6 +174,7 @@ export default function useHiringManagerProfiles(openingId) {
     shortlistProfile,
     rejectProfile,
     getDownloadUrl,
+    retryRecommendation,
     refresh: fetchProfiles,
   };
 }

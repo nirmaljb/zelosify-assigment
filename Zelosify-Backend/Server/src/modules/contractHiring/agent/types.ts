@@ -221,3 +221,54 @@ export interface ValidationResult<T> {
   data?: T;
   errors?: string[];
 }
+
+// ============================================================================
+// Prompt Injection Validation Types
+// ============================================================================
+
+/**
+ * Severity level for detected injection patterns
+ */
+export type InjectionSeverity = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+
+/**
+ * Category of detected injection attempt
+ */
+export type InjectionCategory =
+  | "INSTRUCTION_OVERRIDE"
+  | "SYSTEM_PROMPT_MANIPULATION"
+  | "ROLE_PLAYING"
+  | "JAILBREAK"
+  | "OUTPUT_MANIPULATION"
+  | "CODE_INJECTION"
+  | "DELIMITER_ABUSE"
+  | "ENCODING_ATTACK"
+  | "CONTEXT_ESCAPE";
+
+/**
+ * Individual injection flag detected
+ */
+export interface InjectionFlag {
+  category: InjectionCategory;
+  severity: InjectionSeverity;
+  pattern: string;
+  matchedText: string;
+  position: number;
+  description: string;
+}
+
+/**
+ * Complete prompt injection validation result
+ */
+export interface InjectionValidationResult {
+  safe: boolean;
+  flags: InjectionFlag[];
+  highestSeverity: InjectionSeverity | null;
+  totalFlagsCount: number;
+  flagsBySeverity: Record<InjectionSeverity, number>;
+  flagsByCategory: Record<InjectionCategory, number>;
+  sanitizedText: string;
+  originalLength: number;
+  sanitizedLength: number;
+  validatedAt: string;
+}

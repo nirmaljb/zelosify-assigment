@@ -4,6 +4,18 @@ import { useState, useCallback, useRef } from "react";
 import { Upload, FileText, X, Loader2, CheckCircle, AlertCircle } from "lucide-react";
 import { Button } from "@/components/UI/shadcn/button";
 import { Progress } from "@/components/UI/shadcn/progress";
+import { FILE_CONSTRAINTS } from "@/hooks/ContractHiring/useFileUpload";
+
+/**
+ * Format bytes to human readable size
+ */
+function formatFileSize(bytes) {
+  if (bytes === 0) return "0 B";
+  const k = 1024;
+  const sizes = ["B", "KB", "MB", "GB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
+}
 
 /**
  * Get file icon based on status
@@ -44,17 +56,6 @@ function getStatusText(status) {
 }
 
 /**
- * Format file size to human readable
- */
-function formatFileSize(bytes) {
-  if (bytes === 0) return "0 B";
-  const k = 1024;
-  const sizes = ["B", "KB", "MB", "GB"];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
-}
-
-/**
  * File Upload Zone component with drag-drop support
  */
 export default function FileUploadZone({
@@ -66,7 +67,7 @@ export default function FileUploadZone({
   onClear,
 }) {
   const [isDragOver, setIsDragOver] = useState(false);
-  const [validationError, setValidationError] = useState(null);
+  const [validationErrors, setValidationErrors] = useState([]);
   const fileInputRef = useRef(null);
 
   const handleDragOver = useCallback((e) => {
@@ -81,42 +82,48 @@ export default function FileUploadZone({
     setIsDragOver(false);
   }, []);
 
+  const handleValidationResult = useCallback((result) => {
+    const errors = [];
+    
+    if (result.invalidFiles?.length > 0) {
+      errors.push(`Invalid file types: ${result.invalidFiles.join(", ")}. Only PDF and PPTX are allowed.`);
+    }
+    
+    if (result.oversizedFiles?.length > 0) {
+      errors.push(`Files exceed 10MB limit: ${result.oversizedFiles.join(", ")}`);
+    }
+    
+    setValidationErrors(errors);
+  }, []);
+
   const handleDrop = useCallback(
     (e) => {
       e.preventDefault();
       e.stopPropagation();
       setIsDragOver(false);
-      setValidationError(null);
+      setValidationErrors([]);
 
       const droppedFiles = e.dataTransfer?.files;
       if (droppedFiles?.length > 0) {
         const result = onAddFiles(droppedFiles);
-        if (result.invalidFiles?.length > 0) {
-          setValidationError(
-            `Invalid file types: ${result.invalidFiles.join(", ")}. Only PDF and PPTX are allowed.`
-          );
-        }
+        handleValidationResult(result);
       }
     },
-    [onAddFiles]
+    [onAddFiles, handleValidationResult]
   );
 
   const handleFileSelect = useCallback(
     (e) => {
-      setValidationError(null);
+      setValidationErrors([]);
       const selectedFiles = e.target.files;
       if (selectedFiles?.length > 0) {
         const result = onAddFiles(selectedFiles);
-        if (result.invalidFiles?.length > 0) {
-          setValidationError(
-            `Invalid file types: ${result.invalidFiles.join(", ")}. Only PDF and PPTX are allowed.`
-          );
-        }
+        handleValidationResult(result);
       }
       // Reset input so same file can be selected again
       e.target.value = "";
     },
-    [onAddFiles]
+    [onAddFiles, handleValidationResult]
   );
 
   const handleBrowseClick = useCallback(() => {
@@ -125,6 +132,8 @@ export default function FileUploadZone({
 
   const pendingCount = files.filter((f) => f.status === "pending").length;
   const hasFiles = files.length > 0;
+  const remainingSlots = FILE_CONSTRAINTS.maxFiles - files.length;
+  const maxSizeMB = FILE_CONSTRAINTS.maxFileSize / (1024 * 1024);
 
   return (
     <div className="space-y-4">
@@ -139,9 +148,9 @@ export default function FileUploadZone({
             ? "border-primary bg-primary/5"
             : "border-border hover:border-primary/50"
           }
-          ${isUploading ? "pointer-events-none opacity-60" : "cursor-pointer"}
+          ${isUploading || remainingSlots <= 0 ? "pointer-events-none opacity-60" : "cursor-pointer"}
         `}
-        onClick={!isUploading ? handleBrowseClick : undefined}
+        onClick={!isUploading && remainingSlots > 0 ? handleBrowseClick : undefined}
       >
         <input
           ref={fileInputRef}
@@ -150,6 +159,7 @@ export default function FileUploadZone({
           accept=".pdf,.pptx,application/pdf,application/vnd.openxmlformats-officedocument.presentationml.presentation"
           onChange={handleFileSelect}
           className="hidden"
+          disabled={remainingSlots <= 0}
         />
 
         <Upload
@@ -159,20 +169,34 @@ export default function FileUploadZone({
         />
 
         <p className="text-sm font-medium text-foreground mb-1">
-          {isDragOver ? "Drop files here" : "Drag and drop candidate profiles"}
+          {remainingSlots <= 0 
+            ? `Maximum ${FILE_CONSTRAINTS.maxFiles} files reached`
+            : isDragOver 
+              ? "Drop files here" 
+              : "Drag and drop candidate profiles"
+          }
         </p>
         <p className="text-xs text-muted-foreground mb-4">
-          or click to browse
+          {remainingSlots > 0 ? "or click to browse" : "Remove files to add more"}
         </p>
         <p className="text-xs text-muted-foreground">
-          Supported formats: PDF, PPTX
+          PDF, PPTX only | Max {maxSizeMB}MB per file | Max {FILE_CONSTRAINTS.maxFiles} files
         </p>
+        {remainingSlots > 0 && remainingSlots < FILE_CONSTRAINTS.maxFiles && (
+          <p className="text-xs text-muted-foreground mt-1">
+            {remainingSlots} {remainingSlots === 1 ? "slot" : "slots"} remaining
+          </p>
+        )}
       </div>
 
-      {/* Validation Error */}
-      {validationError && (
+      {/* Validation Errors */}
+      {validationErrors.length > 0 && (
         <div className="p-3 rounded-md bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
-          <p className="text-sm text-red-600 dark:text-red-400">{validationError}</p>
+          {validationErrors.map((error, index) => (
+            <p key={index} className="text-sm text-red-600 dark:text-red-400">
+              {error}
+            </p>
+          ))}
         </div>
       )}
 

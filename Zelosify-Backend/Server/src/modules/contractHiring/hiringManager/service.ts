@@ -12,6 +12,7 @@ import {
   type PaginatedResult,
   toHiringManagerProfileItem,
 } from "../types.js";
+import { forceRetryRecommendation } from "../recommendation/trigger.js";
 
 // ============================================================================
 // Opening Operations
@@ -46,7 +47,7 @@ export async function getOpeningsForHiringManager(
       title: opening.title,
       location: opening.location,
       contractType: opening.contractType,
-      postedDate: opening.postedAt,
+      postedDate: opening.postedDate,
       experienceMin: opening.experienceMin,
       experienceMax: opening.experienceMax,
       status: opening.status,
@@ -82,12 +83,11 @@ export async function getProfilesForOpening(
     description: string | null;
     location: string | null;
     contractType: string | null;
-    locationType: string | null;
     experienceMin: number;
     experienceMax: number | null;
     requiredSkills: string[];
     status: string;
-    postedAt: Date;
+    postedDate: Date;
   };
   profiles: HiringManagerProfileItem[];
   counts: {
@@ -120,12 +120,11 @@ export async function getProfilesForOpening(
       description: opening.description,
       location: opening.location,
       contractType: opening.contractType,
-      locationType: opening.locationType,
       experienceMin: opening.experienceMin,
       experienceMax: opening.experienceMax,
       requiredSkills: opening.requiredSkills,
       status: opening.status,
-      postedAt: opening.postedAt,
+      postedDate: opening.postedDate,
     },
     profiles: profiles.map(toHiringManagerProfileItem),
     counts,
@@ -202,4 +201,52 @@ export async function rejectProfileForHiringManager(
   // Perform reject
   const updated = await repository.rejectProfile(profileId);
   return toHiringManagerProfileItem(updated);
+}
+
+/**
+ * Retry recommendation for a profile.
+ * Verifies the profile belongs to an opening owned by this hiring manager.
+ * Clears existing recommendation and re-triggers AI processing.
+ */
+export async function retryProfileRecommendation(
+  profileId: number,
+  userId: string,
+  tenantId: string
+): Promise<{ success: boolean; message: string }> {
+  // Get profile with opening to verify ownership
+  const profileWithOpening = await repository.findProfileWithOpening(profileId);
+
+  if (!profileWithOpening) {
+    return { success: false, message: "Profile not found" };
+  }
+
+  // Verify ownership: opening must belong to this hiring manager in this tenant
+  if (
+    profileWithOpening.opening.hiringManagerId !== userId ||
+    profileWithOpening.opening.tenantId !== tenantId
+  ) {
+    return { success: false, message: "Not authorized" };
+  }
+
+  // Verify profile is not deleted
+  if (profileWithOpening.isDeleted) {
+    return { success: false, message: "Profile has been deleted" };
+  }
+
+  // Verify profile status allows retry (must be SUBMITTED)
+  if (profileWithOpening.status !== "SUBMITTED") {
+    return { 
+      success: false, 
+      message: `Cannot retry recommendation for ${profileWithOpening.status} profiles` 
+    };
+  }
+
+  // Trigger the retry
+  const retryInitiated = await forceRetryRecommendation(profileId);
+
+  if (!retryInitiated) {
+    return { success: false, message: "Failed to initiate recommendation retry" };
+  }
+
+  return { success: true, message: "Recommendation retry initiated" };
 }

@@ -12,6 +12,7 @@
  */
 
 import prisma from "../../../config/prisma/prisma.js";
+import { Prisma } from "@prisma/client";
 import { processProfileRecommendation } from "../agent/orchestrator.js";
 import type { AgentResult } from "../agent/types.js";
 
@@ -176,7 +177,7 @@ async function processRecommendationAsync(profileId: number): Promise<void> {
           recommended: result.recommendation.recommended,
           recommendationScore: result.recommendation.score,
           recommendationConfidence: result.recommendation.confidence,
-          recommendationExplanation: result.recommendation.reason,
+          recommendationReason: result.recommendation.reason,
           recommendedAt: new Date(),
           recommendationLatencyMs: result.metadata.totalLatencyMs,
           recommendationVersion: result.metadata.version,
@@ -254,4 +255,107 @@ export async function needsRecommendation(profileId: number): Promise<boolean> {
   if (profile.recommended !== null && profile.recommendedAt !== null) return false;
 
   return true;
+}
+
+/**
+ * Force retry recommendation for a profile.
+ * 
+ * This bypasses the idempotency check and:
+ * 1. Clears existing recommendation fields
+ * 2. Re-triggers the recommendation processing
+ * 
+ * Used when hiring manager wants to retry a failed or re-evaluate a profile.
+ * 
+ * @param profileId - The profile ID to retry
+ * @returns true if retry was initiated, false if profile not found or invalid status
+ */
+export async function forceRetryRecommendation(profileId: number): Promise<boolean> {
+  const startTime = Date.now();
+
+  try {
+    // Fetch profile to validate
+    const profile = await prisma.hiringProfile.findUnique({
+      where: { id: profileId },
+      select: {
+        id: true,
+        openingId: true,
+        status: true,
+        opening: {
+          select: {
+            tenantId: true,
+          },
+        },
+      },
+    });
+
+    if (!profile) {
+      log({
+        timestamp: new Date().toISOString(),
+        event: "recommendation_retry_skip",
+        profileId,
+        error: "Profile not found",
+      });
+      return false;
+    }
+
+    // Only allow retry for SUBMITTED profiles
+    if (profile.status !== "SUBMITTED") {
+      log({
+        timestamp: new Date().toISOString(),
+        event: "recommendation_retry_skip",
+        profileId,
+        openingId: profile.openingId,
+        tenantId: profile.opening.tenantId,
+        metadata: { reason: "invalid_status", status: profile.status },
+      });
+      return false;
+    }
+
+    // Clear existing recommendation fields
+    await prisma.hiringProfile.update({
+      where: { id: profileId },
+      data: {
+        recommended: null,
+        recommendationScore: null,
+        recommendationConfidence: null,
+        recommendationReason: null,
+        recommendedAt: null,
+        recommendationLatencyMs: null,
+        recommendationVersion: null,
+        reasoningMetadata: Prisma.DbNull,
+      },
+    });
+
+    log({
+      timestamp: new Date().toISOString(),
+      event: "recommendation_retry_triggered",
+      profileId,
+      openingId: profile.openingId,
+      tenantId: profile.opening.tenantId,
+      durationMs: Date.now() - startTime,
+    });
+
+    // Trigger async processing
+    setImmediate(() => {
+      processRecommendationAsync(profileId).catch((error) => {
+        log({
+          timestamp: new Date().toISOString(),
+          event: "recommendation_retry_async_error",
+          profileId,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      });
+    });
+
+    return true;
+  } catch (error) {
+    log({
+      timestamp: new Date().toISOString(),
+      event: "recommendation_retry_error",
+      profileId,
+      durationMs: Date.now() - startTime,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return false;
+  }
 }

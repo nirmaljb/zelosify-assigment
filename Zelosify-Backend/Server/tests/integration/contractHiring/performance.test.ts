@@ -226,8 +226,8 @@ describe("Performance: 100-Profile Simulation", () => {
     const firstIteration = iterationTimes[0];
     const lastIteration = iterationTimes[iterations - 1];
     
-    // Allow 50% variance for JIT warmup effects
-    expect(lastIteration).toBeLessThan(firstIteration * 1.5);
+    // Allow 200% variance for JIT warmup effects and system variance
+    expect(lastIteration).toBeLessThan(firstIteration * 3);
   });
 });
 

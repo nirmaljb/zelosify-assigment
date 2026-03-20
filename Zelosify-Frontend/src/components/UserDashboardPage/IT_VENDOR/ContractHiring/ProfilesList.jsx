@@ -60,13 +60,13 @@ function ProfilesSkeleton() {
   return (
     <div className="space-y-4">
       {Array.from({ length: 3 }).map((_, i) => (
-        <div key={i} className="flex items-center gap-6 p-6 rounded-none border border-border bg-card shadow-sm">
-          <Skeleton className="h-12 w-12 rounded-none bg-muted" />
+        <div key={i} className="flex items-center gap-6 p-6 rounded-lg border border-border bg-card shadow-sm">
+          <Skeleton className="h-12 w-12 rounded-md bg-muted" />
           <div className="flex-1 space-y-3">
             <Skeleton className="h-5 w-64 bg-muted" />
             <Skeleton className="h-3 w-40 bg-muted" />
           </div>
-          <Skeleton className="h-10 w-24 rounded-none bg-muted" />
+          <Skeleton className="h-10 w-24 rounded-md bg-muted" />
         </div>
       ))}
     </div>
@@ -78,7 +78,7 @@ function ProfilesSkeleton() {
  */
 function EmptyState() {
   return (
-    <div className="flex flex-col items-center justify-center py-16 text-center border border-dashed border-border rounded-none bg-muted/30 shadow-sm">
+    <div className="flex flex-col items-center justify-center py-16 text-center border border-dashed border-border rounded-lg bg-muted/30 shadow-sm">
       <FileText className="h-12 w-12 text-muted-foreground mb-6" />
       <h3 className="text-lg font-bold text-foreground mb-2 uppercase tracking-widest">No profiles uploaded</h3>
       <p className="text-sm text-muted-foreground max-w-xs mx-auto leading-relaxed">
@@ -189,10 +189,10 @@ export default function ProfilesList({ profiles, isLoading, onRefresh }) {
         {profiles.map((profile) => (
           <div
             key={profile.id}
-            className="flex items-center gap-6 p-6 rounded-none border border-border bg-card hover:border-foreground/50 transition-all duration-300 shadow-sm group selection:bg-foreground selection:text-background"
+            className="flex items-center gap-6 p-6 rounded-lg border border-border bg-card hover:border-foreground/50 transition-all duration-300 shadow-sm group selection:bg-foreground selection:text-background"
           >
             {/* File Icon */}
-            <div className="flex-shrink-0 h-14 w-14 rounded-none bg-background border border-border flex items-center justify-center group-hover:bg-foreground group-hover:border-foreground transition-all duration-300">
+            <div className="flex-shrink-0 h-14 w-14 rounded-md bg-background border border-border flex items-center justify-center group-hover:bg-foreground group-hover:border-foreground transition-all duration-300">
               <span className="text-[10px] font-bold text-muted-foreground group-hover:text-background uppercase tracking-widest">
                 {getFileExtension(profile.fileName)}
               </span>
@@ -241,7 +241,7 @@ export default function ProfilesList({ profiles, isLoading, onRefresh }) {
               <Button
                 variant="outline"
                 size="icon"
-                className="h-10 w-10 rounded-none border-border bg-background hover:bg-red-600 hover:border-red-600 hover:text-white transition-all"
+                className="h-10 w-10 rounded-md border-border bg-background hover:bg-red-600 hover:border-red-600 hover:text-white transition-all"
                 onClick={() => handleDeleteClick(profile)}
                 title="Delete"
               >

@@ -123,7 +123,7 @@ function Pagination({ pagination, onPrevPage, onNextPage, hasPrevPage, hasNextPa
           size="sm"
           onClick={onPrevPage}
           disabled={!hasPrevPage}
-          className="rounded-none border-border bg-background hover:bg-muted text-[10px] font-bold uppercase tracking-widest text-foreground"
+          className="border-border bg-background hover:bg-muted text-[10px] font-bold uppercase tracking-widest text-foreground rounded-md"
         >
           <ChevronLeft className="h-3 w-3 mr-1" />
           Previous
@@ -136,7 +136,7 @@ function Pagination({ pagination, onPrevPage, onNextPage, hasPrevPage, hasNextPa
           size="sm"
           onClick={onNextPage}
           disabled={!hasNextPage}
-          className="rounded-none border-border bg-background hover:bg-muted text-[10px] font-bold uppercase tracking-widest text-foreground"
+          className="border-border bg-background hover:bg-muted text-[10px] font-bold uppercase tracking-widest text-foreground rounded-md"
         >
           Next
           <ChevronRight className="h-3 w-3 ml-1" />
@@ -209,13 +209,13 @@ export default function OpeningsListLayout() {
                 placeholder="Search openings..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 text-sm bg-background border border-border rounded-none text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground transition-colors"
+                className="w-full pl-10 pr-4 py-3 text-sm bg-background border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground transition-colors"
               />
             </div>
           </div>
 
           {/* Table */}
-          <div className="border border-border rounded-none overflow-hidden bg-card shadow-sm">
+          <div className="border border-border rounded-lg overflow-hidden bg-card shadow-sm">
             {error ? (
               <ErrorState message={error} onRetry={refresh} />
             ) : (
@@ -223,11 +223,11 @@ export default function OpeningsListLayout() {
                 <Table>
                   <TableHeader>
                     <TableRow className="border-b border-border bg-muted/50 hover:bg-muted/50">
-                      <TableHead className="font-semibold">Title</TableHead>
-                      <TableHead className="font-semibold">Location</TableHead>
-                      <TableHead className="font-semibold">Contract Type</TableHead>
-                      <TableHead className="font-semibold">Posted Date</TableHead>
-                      <TableHead className="font-semibold">Hiring Manager</TableHead>
+                      <TableHead className="px-4 py-3 text-left text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Title</TableHead>
+                      <TableHead className="px-4 py-3 text-left text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Location</TableHead>
+                      <TableHead className="px-4 py-3 text-left text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Contract Type</TableHead>
+                      <TableHead className="px-4 py-3 text-left text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Posted</TableHead>
+                      <TableHead className="px-4 py-3 text-left text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Hiring Manager</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -243,10 +243,10 @@ export default function OpeningsListLayout() {
                       filteredOpenings.map((opening) => (
                         <TableRow
                           key={opening.id}
-                          className="cursor-pointer hover:bg-muted/50"
+                          className="cursor-pointer hover:bg-muted/50 border-b border-border"
                           onClick={() => handleRowClick(opening.id)}
                         >
-                          <TableCell>
+                          <TableCell className="px-4 py-3">
                             <div className="font-medium text-foreground">
                               {opening.title}
                             </div>
@@ -256,11 +256,11 @@ export default function OpeningsListLayout() {
                               </div>
                             )}
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="px-4 py-3">
                             <div className="flex items-center gap-2">
                               <span className="text-foreground">{opening.location}</span>
                               <span
-                                className={`px-2 py-0.5 text-[10px] rounded-full ${getLocationBadgeClass(
+                                className={`px-2 py-0.5 text-[10px] rounded-full font-bold uppercase tracking-widest ${getLocationBadgeClass(
                                   opening.locationType
                                 )}`}
                               >
@@ -268,18 +268,18 @@ export default function OpeningsListLayout() {
                               </span>
                             </div>
                           </TableCell>
-                          <TableCell>
-                            <span className="text-foreground">
+                          <TableCell className="px-4 py-3">
+                            <span className="text-foreground text-sm font-medium">
                               {getContractTypeLabel(opening.contractType)}
                             </span>
                           </TableCell>
-                          <TableCell>
-                            <span className="text-muted-foreground">
+                          <TableCell className="px-4 py-3">
+                            <span className="text-muted-foreground text-sm">
                               {formatDate(opening.postedDate)}
                             </span>
                           </TableCell>
-                          <TableCell>
-                            <span className="text-foreground">
+                          <TableCell className="px-4 py-3">
+                            <span className="text-foreground text-sm font-medium">
                               {opening.hiringManagerName || "-"}
                             </span>
                           </TableCell>

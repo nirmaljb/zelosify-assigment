@@ -82,4 +82,36 @@ router.post(
   }) as RequestHandler
 );
 
+/**
+ * GET /profiles/:id/download-url
+ * Generate temporary download URL for a profile
+ */
+router.get(
+  "/profiles/:id/download-url",
+  ...authMiddleware,
+  (async (req, res, next) => {
+    try {
+      await hiringManagerController.getDownloadUrl(req as any, res);
+    } catch (error) {
+      next(error);
+    }
+  }) as RequestHandler
+);
+
+/**
+ * POST /profiles/:id/retry-recommendation
+ * Retry AI recommendation for a profile
+ */
+router.post(
+  "/profiles/:id/retry-recommendation",
+  ...authMiddleware,
+  (async (req, res, next) => {
+    try {
+      await hiringManagerController.retryRecommendation(req as any, res);
+    } catch (error) {
+      next(error);
+    }
+  }) as RequestHandler
+);
+
 export default router;

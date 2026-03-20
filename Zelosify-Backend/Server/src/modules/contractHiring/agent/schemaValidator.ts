@@ -12,7 +12,7 @@ import type {
   AgentResult,
   ValidationResult,
   RecommendationDecision,
-} from "../types.js";
+} from "./types.js";
 
 // ============================================================================
 // Validation Helpers

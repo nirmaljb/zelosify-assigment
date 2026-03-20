@@ -25,6 +25,86 @@ declare module "express-serve-static-core" {
 const userCache = new Map();
 const USER_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
+/**
+ * Middleware for logout - validates token but doesn't require user to exist in DB
+ * This allows logout to work even if the user was deleted from the database
+ */
+export const authenticateForLogout = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const token =
+      req.headers.authorization?.split(" ")[1] || req.cookies.access_token;
+
+    // If no token, still allow logout (just clear cookies)
+    if (!token) {
+      req.user = null;
+      return next();
+    }
+
+    const decoded = jwt.decode(token, { complete: true });
+    if (!decoded || !decoded.payload) {
+      // Invalid token format, but still allow logout to clear cookies
+      req.user = null;
+      return next();
+    }
+
+    // Try to verify token, but don't fail if verification fails
+    try {
+      const key = await keycloakJwksClient.getSigningKey(decoded.header.kid);
+      const signingKey = key.getPublicKey();
+
+      const verified = jwt.verify(token, signingKey, {
+        algorithms: ["RS256"],
+        issuer: `${KEYCLOAK_URL}/realms/${REALM_NAME}`,
+      }) as jwt.JwtPayload;
+
+      if (verified && typeof verified === "object") {
+        // Try to get user from DB, but don't fail if not found
+        const user = await prisma.user.findUnique({
+          where: { externalId: verified.sub },
+          select: {
+            id: true,
+            username: true,
+            email: true,
+            role: true,
+            department: true,
+            provider: true,
+            tenant: {
+              select: {
+                tenantId: true,
+                companyName: true,
+              },
+            },
+          },
+        });
+
+        // Set user if found, otherwise set basic info from token
+        req.user = user || { 
+          externalId: verified.sub, 
+          provider: "KEYCLOAK",
+          _fromToken: true 
+        };
+      } else {
+        req.user = null;
+      }
+    } catch (error) {
+      // Token verification failed, but still allow logout
+      console.log("Token verification failed during logout, proceeding anyway");
+      req.user = null;
+    }
+
+    next();
+  } catch (error) {
+    console.error("Logout authentication error:", error);
+    // Still allow logout even if there's an error
+    req.user = null;
+    next();
+  }
+};
+
 // 🔹 Middleware: Authenticate User & Refresh Token If Expired
 export const authenticateUser = async (
   req: Request,

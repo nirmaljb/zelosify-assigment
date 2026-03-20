@@ -59,7 +59,7 @@ export async function generatePresignedUploadUrl(
   const s3Key = generateS3Key(tenantId, openingId, fileName);
   const storageService = createStorageService();
   
-  const uploadUrl = await storageService.getUploadURL(s3Key);
+  const uploadUrl = await storageService.getUploadURL(s3Key, contentType);
 
   return {
     uploadUrl,

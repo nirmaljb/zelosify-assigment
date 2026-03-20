@@ -111,8 +111,8 @@ function ErrorState({ message, onRetry }) {
  */
 function InfoItem({ icon: Icon, label, value }) {
   return (
-    <div className="flex items-start gap-4 p-4 bg-muted/40 border border-border rounded-none shadow-sm">
-      <div className="flex-shrink-0 h-10 w-10 rounded-none bg-background border border-border flex items-center justify-center">
+    <div className="flex items-start gap-4 p-4 bg-muted/40 border border-border rounded-lg shadow-sm">
+      <div className="flex-shrink-0 h-10 w-10 rounded-md bg-background border border-border flex items-center justify-center">
         <Icon className="h-4 w-4 text-zinc-400" />
       </div>
       <div>
@@ -161,7 +161,7 @@ export default function OpeningDetailLayout({ openingId }) {
             variant="outline"
             size="sm"
             onClick={handleBackClick}
-            className="mb-8 rounded-none border-border bg-background hover:bg-muted text-foreground transition-all font-bold uppercase tracking-widest text-[10px]"
+            className="mb-8 rounded-md border-border bg-background hover:bg-muted text-foreground transition-all font-bold uppercase tracking-widest text-[10px]"
           >
             <ArrowLeft className="h-3 w-3 mr-2" />
             Back to Openings
@@ -176,10 +176,10 @@ export default function OpeningDetailLayout({ openingId }) {
               {/* Header */}
               <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                 <div>
-                  <h1 className="text-4xl font-bold tracking-tighter text-foreground">
+                  <h1 className="text-2xl font-bold tracking-tight text-foreground">
                     {opening.title}
                   </h1>
-                  <div className="flex items-center gap-3 mt-4">
+                  <div className="flex items-center gap-3 mt-3">
                     <span
                       className={`px-2 py-0.5 text-[10px] rounded-full ${getStatusBadgeClass(
                         opening.status
@@ -192,7 +192,7 @@ export default function OpeningDetailLayout({ openingId }) {
                     </p>
                   </div>
                 </div>
-                <Button variant="outline" size="sm" onClick={refresh} className="rounded-none border-border bg-background hover:bg-muted shadow-sm font-bold uppercase tracking-widest text-[10px] h-10 px-4 text-foreground">
+                <Button variant="outline" size="sm" onClick={refresh} className="rounded-md border-border bg-background hover:bg-muted shadow-sm font-bold uppercase tracking-widest text-[10px] h-10 px-4 text-foreground">
                   <RefreshCw className="h-3.5 w-3.5 mr-2" />
                   Refresh
                 </Button>
@@ -225,7 +225,7 @@ export default function OpeningDetailLayout({ openingId }) {
               {/* Description & Required Skills Section */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {opening.description && (
-                  <div className="md:col-span-2 p-8 bg-card border border-border rounded-none shadow-sm">
+                  <div className="md:col-span-2 p-8 bg-card border border-border rounded-lg shadow-sm">
                     <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-6">Description</h3>
                     <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
                       {opening.description}
@@ -234,13 +234,13 @@ export default function OpeningDetailLayout({ openingId }) {
                 )}
 
                 {opening.requiredSkills && opening.requiredSkills.length > 0 && (
-                  <div className="p-8 bg-card border border-border rounded-none shadow-sm">
+                  <div className="p-8 bg-card border border-border rounded-lg shadow-sm">
                     <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-6">Required Skills</h3>
                     <div className="flex flex-wrap gap-2">
                       {opening.requiredSkills.map((skill, index) => (
                         <span
                           key={index}
-                          className="px-3 py-1.5 text-[10px] font-bold bg-muted text-foreground rounded-none uppercase tracking-widest"
+                          className="px-3 py-1.5 text-[10px] font-bold bg-muted text-foreground rounded-md uppercase tracking-widest"
                         >
                           {skill}
                         </span>
@@ -271,7 +271,7 @@ export default function OpeningDetailLayout({ openingId }) {
                 </div>
 
                 {/* Uploaded Profiles */}
-                <div className="p-8 bg-background border border-border rounded-none shadow-sm">
+                <div className="p-8 bg-background border border-border rounded-lg shadow-sm">
                   <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-8 flex items-center justify-between">
                     <span className="flex items-center gap-3">
                       Uploaded Profiles

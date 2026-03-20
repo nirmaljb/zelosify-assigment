@@ -143,3 +143,19 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# Stale / leftover Next.js build artifacts
+.next_stale*/
+
+# Claude / AI agent meta-files
+CLAUDE.md
+
+# Prisma migration to exclude
+Zelosify-Backend/Server/prisma/migrations/20260319052611_add_original_filename/
+
+# Vendored / auto-generated controllers
+Zelosify-Backend/Server/src/modules/contractHiring/vendor/directUploadController.ts
+
+# Generated page stubs
+Zelosify-Frontend/src/app/(UserDashBoard)/hiring-manager/page.jsx
+Zelosify-Frontend/src/app/(UserDashBoard)/vendor/page.jsx

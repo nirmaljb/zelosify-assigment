@@ -3,6 +3,14 @@
  * and related operations across the application.
  */
 
+const hasBrowserLocalStorage = () => {
+  return (
+    typeof window !== "undefined" &&
+    typeof window.localStorage !== "undefined" &&
+    typeof window.localStorage.removeItem === "function"
+  );
+};
+
 /**
  * Get user role from cookies
  * @returns {string|null} User role or null if not found
@@ -30,7 +38,9 @@ export const getRoleRedirectPath = (role) => {
     case "BUSINESS_USER":
       return "/business-user/digital-initiative";
     case "IT_VENDOR":
-      return "/vendor/payments";
+      return "/vendor/openings";
+    case "HIRING_MANAGER":
+      return "/hiring-manager/openings";
     default:
       return "/login"; // Let middleware handle it
   }
@@ -51,6 +61,8 @@ export const handleRoleBasedRedirect = (role) => {
  * Clear all authentication data (cookies and localStorage)
  */
 export const clearAuthData = () => {
+  if (typeof document === "undefined") return;
+
   // Clear cookies
   document.cookie =
     "access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
@@ -59,5 +71,7 @@ export const clearAuthData = () => {
   document.cookie = "role=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
 
   // Clear localStorage
-  localStorage.removeItem("zelosify_user");
+  if (hasBrowserLocalStorage()) {
+    window.localStorage.removeItem("zelosify_user");
+  }
 };

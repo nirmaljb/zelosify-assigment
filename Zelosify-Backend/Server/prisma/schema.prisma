@@ -76,12 +76,13 @@ model Opening {
 }
 
 model hiringProfile {
-  id          Int           @id @default(autoincrement())
-  openingId   String
-  s3Key       String        @unique
-  uploadedBy  String
-  submittedAt DateTime      @default(now())
-  status      ProfileStatus @default(SUBMITTED)
+  id               Int           @id @default(autoincrement())
+  openingId        String
+  s3Key            String        @unique
+  originalFileName String?
+  uploadedBy       String
+  submittedAt      DateTime      @default(now())
+  status           ProfileStatus @default(SUBMITTED)
 
   shortlistedBy String?
   shortlistedAt DateTime?

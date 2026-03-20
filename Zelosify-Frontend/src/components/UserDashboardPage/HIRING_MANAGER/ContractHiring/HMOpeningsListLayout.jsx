@@ -54,10 +54,10 @@ function getStatusBadge(status) {
  */
 function StatsCard({ icon: Icon, label, value, subtext, accentColor }) {
   return (
-    <div className="flex flex-col gap-4 p-6 rounded-none bg-card border border-border hover:border-foreground/50 transition-colors shadow-sm">
+    <div className="flex flex-col gap-4 p-6 rounded-lg bg-card border border-border hover:border-foreground/50 transition-colors shadow-sm">
       <div className="flex items-center justify-between">
         <p className="text-xs font-medium text-muted-foreground uppercase tracking-widest">{label}</p>
-        <div className={`p-1.5 rounded-sm ${accentColor}`}>
+        <div className={`p-1.5 rounded-md ${accentColor}`}>
           <Icon className="h-3.5 w-3.5" />
         </div>
       </div>
@@ -272,7 +272,7 @@ export default function HMOpeningsListLayout() {
             />
             <StatsCard
               icon={TrendingUp}
-              label="Candidates"
+              label="Active Candidates"
               value={stats.totalProfiles}
               accentColor="bg-blue-500/10 text-blue-400"
             />
@@ -299,13 +299,13 @@ export default function HMOpeningsListLayout() {
                 placeholder="Search openings..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 text-sm bg-background border border-border rounded-none text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground transition-colors"
+                className="w-full pl-10 pr-4 py-3 text-sm bg-background border border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground transition-colors"
               />
             </div>
           </div>
 
           {/* Table Container */}
-          <div className="border border-border rounded-none overflow-hidden bg-card shadow-sm mt-8">
+          <div className="border border-border rounded-lg overflow-hidden bg-card shadow-sm mt-8">
             {error ? (
               <ErrorState message={error} onRetry={refresh} />
             ) : (
@@ -313,22 +313,22 @@ export default function HMOpeningsListLayout() {
                 <Table>
                   <TableHeader>
                     <TableRow className="border-b border-border bg-muted/50 hover:bg-muted/50">
-                      <TableHead className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      <TableHead className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest py-4 px-6">
                         Position
                       </TableHead>
-                      <TableHead className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      <TableHead className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest py-4 px-6">
                         Location
                       </TableHead>
-                      <TableHead className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      <TableHead className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest py-4 px-6">
                         Experience
                       </TableHead>
-                      <TableHead className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                        Candidates
+                      <TableHead className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest py-4 px-6">
+                        Active Candidates
                       </TableHead>
-                      <TableHead className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      <TableHead className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest py-4 px-6">
                         Posted
                       </TableHead>
-                      <TableHead className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] py-4 px-6">
+                      <TableHead className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest py-4 px-6">
                         Status
                       </TableHead>
                     </TableRow>

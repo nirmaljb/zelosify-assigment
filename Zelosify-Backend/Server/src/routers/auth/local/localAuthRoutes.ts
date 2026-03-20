@@ -7,7 +7,7 @@ import {
   RequestHandler,
 } from "express";
 import asyncHandler from "../../../utils/handler/asyncHandler.js";
-import { authenticateUser } from "../../../middlewares/auth/authenticateMiddleware.js";
+import { authenticateUser, authenticateForLogout } from "../../../middlewares/auth/authenticateMiddleware.js";
 import {
   logout,
   register,
@@ -66,8 +66,8 @@ router.post("/verify-totp", wrapHandler(verifyTOTP));
 
 /**
  * POST /logout - Logout authenticated user
- * Requires authentication middleware to access user session
+ * Uses lightweight auth middleware that allows logout even if user was deleted from DB
  */
-router.post("/logout", authenticateUser, wrapProtectedHandler(logout));
+router.post("/logout", authenticateForLogout, wrapProtectedHandler(logout));
 
 export default router;
