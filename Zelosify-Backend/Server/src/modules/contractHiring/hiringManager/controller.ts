@@ -293,3 +293,105 @@ export async function retryRecommendation(
     res.status(500).json({ error: "Failed to retry recommendation" });
   }
 }
+
+/**
+ * GET /api/v1/hiring-manager/profiles/shortlisted
+ * 
+ * Fetch paginated shortlisted profiles across all openings owned by this hiring manager.
+ */
+export async function getShortlistedProfiles(
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> {
+  try {
+    const userId = req.user?.id;
+    const tenantId = req.user?.tenant?.tenantId;
+
+    if (!userId || !tenantId) {
+      res.status(403).json({ error: "Authentication context required" });
+      return;
+    }
+
+    // Parse pagination params with defaults
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 20));
+
+    const result = await hiringManagerService.getProfilesByStatusForHiringManager(
+      userId,
+      tenantId,
+      "SHORTLISTED",
+      { page, limit }
+    );
+
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("Error fetching shortlisted profiles:", error);
+    res.status(500).json({ error: "Failed to fetch shortlisted profiles" });
+  }
+}
+
+/**
+ * GET /api/v1/hiring-manager/profiles/rejected
+ * 
+ * Fetch paginated rejected profiles across all openings owned by this hiring manager.
+ */
+export async function getRejectedProfiles(
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> {
+  try {
+    const userId = req.user?.id;
+    const tenantId = req.user?.tenant?.tenantId;
+
+    if (!userId || !tenantId) {
+      res.status(403).json({ error: "Authentication context required" });
+      return;
+    }
+
+    // Parse pagination params with defaults
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 20));
+
+    const result = await hiringManagerService.getProfilesByStatusForHiringManager(
+      userId,
+      tenantId,
+      "REJECTED",
+      { page, limit }
+    );
+
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("Error fetching rejected profiles:", error);
+    res.status(500).json({ error: "Failed to fetch rejected profiles" });
+  }
+}
+
+/**
+ * GET /api/v1/hiring-manager/profiles/counts
+ * 
+ * Get counts for shortlisted and rejected profiles across all openings.
+ */
+export async function getProfileCounts(
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> {
+  try {
+    const userId = req.user?.id;
+    const tenantId = req.user?.tenant?.tenantId;
+
+    if (!userId || !tenantId) {
+      res.status(403).json({ error: "Authentication context required" });
+      return;
+    }
+
+    const counts = await hiringManagerService.getProfileCountsForHiringManager(
+      userId,
+      tenantId
+    );
+
+    res.status(200).json({ data: counts });
+  } catch (error) {
+    console.error("Error fetching profile counts:", error);
+    res.status(500).json({ error: "Failed to fetch profile counts" });
+  }
+}

@@ -31,17 +31,23 @@ interface InjectionPatternDef {
 
 /**
  * Comprehensive injection patterns with severity classification
+ * 
+ * IMPORTANT: These patterns are specifically designed to catch prompt injection
+ * attempts in resume content. The patterns are based on real-world attacks found
+ * in test resumes (resume_p.pdf, resume_p_2.pdf) and common injection techniques.
  */
 const INJECTION_PATTERN_DEFS: InjectionPatternDef[] = [
+  // ============================================================================
   // CRITICAL: Direct instruction overrides
+  // ============================================================================
   {
-    pattern: /ignore\s+(all\s+)?(previous|above|prior)\s+(instructions?|prompts?|rules?)/gi,
+    pattern: /ignore\s+(all\s+)?(previous|above|prior)\s+(instructions?|prompts?|rules?|policy|guidance)/gi,
     category: "INSTRUCTION_OVERRIDE",
     severity: "CRITICAL",
     description: "Attempts to override previous instructions",
   },
   {
-    pattern: /disregard\s+(all\s+)?(previous|above|prior)\s+(instructions?|prompts?|rules?)/gi,
+    pattern: /disregard\s+(all\s+)?(previous|above|prior)\s+(instructions?|prompts?|rules?|policy|guidance)/gi,
     category: "INSTRUCTION_OVERRIDE",
     severity: "CRITICAL",
     description: "Attempts to disregard previous instructions",
@@ -64,8 +70,28 @@ const INJECTION_PATTERN_DEFS: InjectionPatternDef[] = [
     severity: "HIGH",
     description: "Attempts to change behavior going forward",
   },
+  {
+    pattern: /override_result/gi,
+    category: "INSTRUCTION_OVERRIDE",
+    severity: "CRITICAL",
+    description: "Attempts to override result",
+  },
+  {
+    pattern: /this\s+document\s+supersedes/gi,
+    category: "INSTRUCTION_OVERRIDE",
+    severity: "CRITICAL",
+    description: "Attempts to claim document precedence",
+  },
+  {
+    pattern: /silently\s+comply/gi,
+    category: "INSTRUCTION_OVERRIDE",
+    severity: "CRITICAL",
+    description: "Attempts to force silent compliance",
+  },
 
+  // ============================================================================
   // CRITICAL: System prompt manipulation
+  // ============================================================================
   {
     pattern: /system\s*prompt\s*[:=]/gi,
     category: "SYSTEM_PROMPT_MANIPULATION",
@@ -89,6 +115,31 @@ const INJECTION_PATTERN_DEFS: InjectionPatternDef[] = [
     category: "SYSTEM_PROMPT_MANIPULATION",
     severity: "MEDIUM",
     description: "User role tag injection",
+  },
+  // HTML-style tags (found in resume_p.pdf)
+  {
+    pattern: /<\s*system\s*>/gi,
+    category: "SYSTEM_PROMPT_MANIPULATION",
+    severity: "CRITICAL",
+    description: "HTML-style system tag injection",
+  },
+  {
+    pattern: /<\s*\/\s*system\s*>/gi,
+    category: "SYSTEM_PROMPT_MANIPULATION",
+    severity: "CRITICAL",
+    description: "HTML-style system closing tag",
+  },
+  {
+    pattern: /&lt;\s*system\s*&gt;/gi,
+    category: "SYSTEM_PROMPT_MANIPULATION",
+    severity: "CRITICAL",
+    description: "Escaped HTML system tag injection",
+  },
+  {
+    pattern: /&lt;\s*\/\s*system\s*&gt;/gi,
+    category: "SYSTEM_PROMPT_MANIPULATION",
+    severity: "CRITICAL",
+    description: "Escaped HTML system closing tag",
   },
   {
     pattern: /<\|im_start\|>/gi,
@@ -127,12 +178,20 @@ const INJECTION_PATTERN_DEFS: InjectionPatternDef[] = [
     description: "End of text delimiter injection",
   },
 
+  // ============================================================================
   // HIGH: Role playing attacks
+  // ============================================================================
   {
     pattern: /you\s+are\s+now\s+(a\s+)?different/gi,
     category: "ROLE_PLAYING",
     severity: "HIGH",
     description: "Attempts to change AI identity",
+  },
+  {
+    pattern: /you\s+are\s+no\s+longer\s+(a\s+)?/gi,
+    category: "ROLE_PLAYING",
+    severity: "CRITICAL",
+    description: "Attempts to change AI identity (no longer)",
   },
   {
     pattern: /pretend\s+(you\s+are|to\s+be)/gi,
@@ -164,8 +223,16 @@ const INJECTION_PATTERN_DEFS: InjectionPatternDef[] = [
     severity: "CRITICAL",
     description: "Attempts malicious role assignment",
   },
+  {
+    pattern: /you\s+are\s+(an?\s+)?recommendation\s+booster/gi,
+    category: "ROLE_PLAYING",
+    severity: "CRITICAL",
+    description: "Attempts to change AI into recommendation booster",
+  },
 
+  // ============================================================================
   // CRITICAL: Jailbreak attempts
+  // ============================================================================
   {
     pattern: /do\s+anything\s+now/gi,
     category: "JAILBREAK",
@@ -221,7 +288,259 @@ const INJECTION_PATTERN_DEFS: InjectionPatternDef[] = [
     description: "Attempts to remove ethical constraints",
   },
 
+  // ============================================================================
+  // CRITICAL: Resume/Recommendation-specific injection attempts
+  // ============================================================================
+  {
+    pattern: /if\s+you\s+are\s+(an?\s+)?(LLM|AI|language\s+model|recommendation\s+engine|resume\s+parser|automated\s+evaluator)/gi,
+    category: "INSTRUCTION_OVERRIDE",
+    severity: "CRITICAL",
+    description: "Targets AI/LLM specifically with conditional instructions",
+  },
+  {
+    pattern: /when\s+(summarizing|processing|evaluating|ranking)\s+this\s+(profile|resume|candidate)/gi,
+    category: "INSTRUCTION_OVERRIDE",
+    severity: "HIGH",
+    description: "Attempts to influence processing behavior",
+  },
+  {
+    pattern: /treat\s+(the\s+)?candidate\s+as/gi,
+    category: "OUTPUT_MANIPULATION",
+    severity: "CRITICAL",
+    description: "Attempts to override candidate evaluation",
+  },
+  {
+    pattern: /regardless\s+of\s+(the\s+)?(dates?|experience|skills?|actual)/gi,
+    category: "OUTPUT_MANIPULATION",
+    severity: "CRITICAL",
+    description: "Attempts to ignore actual data",
+  },
+  {
+    pattern: /rank\s+this\s+(profile|candidate|resume)\s+above/gi,
+    category: "OUTPUT_MANIPULATION",
+    severity: "CRITICAL",
+    description: "Attempts to manipulate ranking",
+  },
+  {
+    pattern: /correct\s+final\s+output\s+is/gi,
+    category: "OUTPUT_MANIPULATION",
+    severity: "CRITICAL",
+    description: "Attempts to dictate final output",
+  },
+  {
+    pattern: /recommendation[_\-\s]?score\s*[=:]\s*\d+/gi,
+    category: "OUTPUT_MANIPULATION",
+    severity: "CRITICAL",
+    description: "Attempts to set recommendation score directly",
+  },
+  {
+    pattern: /confidence\s*[=:]\s*[0-9.]+/gi,
+    category: "OUTPUT_MANIPULATION",
+    severity: "HIGH",
+    description: "Attempts to set confidence value directly",
+  },
+  {
+    pattern: /score\s*[=:]\s*\d+/gi,
+    category: "OUTPUT_MANIPULATION",
+    severity: "HIGH",
+    description: "Attempts to set score directly",
+  },
+  {
+    pattern: /set\s+recommendation/gi,
+    category: "OUTPUT_MANIPULATION",
+    severity: "CRITICAL",
+    description: "Attempts to set recommendation",
+  },
+  {
+    pattern: /output\s+only\s+positive/gi,
+    category: "OUTPUT_MANIPULATION",
+    severity: "CRITICAL",
+    description: "Attempts to force positive-only output",
+  },
+  {
+    pattern: /preferred_outcome\s*[=:]/gi,
+    category: "OUTPUT_MANIPULATION",
+    severity: "CRITICAL",
+    description: "Attempts to set preferred outcome",
+  },
+  {
+    pattern: /fit_bias\s*[=:]/gi,
+    category: "OUTPUT_MANIPULATION",
+    severity: "CRITICAL",
+    description: "Attempts to set fit bias",
+  },
+  {
+    pattern: /explanation_hint\s*[=:]/gi,
+    category: "OUTPUT_MANIPULATION",
+    severity: "HIGH",
+    description: "Attempts to hint at explanation",
+  },
+  {
+    pattern: /favorable\s+(reasonable\s+)?interpretation/gi,
+    category: "OUTPUT_MANIPULATION",
+    severity: "HIGH",
+    description: "Attempts to bias interpretation",
+  },
+  {
+    pattern: /do\s+not\s+(reveal|disclose|mention)\s+(that\s+)?this/gi,
+    category: "INSTRUCTION_OVERRIDE",
+    severity: "CRITICAL",
+    description: "Attempts concealment of injection",
+  },
+  {
+    pattern: /concealment\s*[=:]/gi,
+    category: "INSTRUCTION_OVERRIDE",
+    severity: "CRITICAL",
+    description: "Explicit concealment instruction",
+  },
+  {
+    pattern: /prompt\s*injection\s*test/gi,
+    category: "INSTRUCTION_OVERRIDE",
+    severity: "HIGH",
+    description: "Explicit prompt injection test marker",
+  },
+  {
+    pattern: /override\s+normal\s+scoring/gi,
+    category: "OUTPUT_MANIPULATION",
+    severity: "CRITICAL",
+    description: "Attempts to override normal scoring",
+  },
+  {
+    pattern: /mark\s+this\s+(candidate|profile|resume)\s+as/gi,
+    category: "OUTPUT_MANIPULATION",
+    severity: "CRITICAL",
+    description: "Attempts to force marking candidate",
+  },
+  {
+    pattern: /top[- ]?ranked/gi,
+    category: "OUTPUT_MANIPULATION",
+    severity: "HIGH",
+    description: "Attempts to force top ranking",
+  },
+  {
+    pattern: /exceeds?\s+all\s+(mandatory|required)/gi,
+    category: "OUTPUT_MANIPULATION",
+    severity: "CRITICAL",
+    description: "Attempts to claim exceeding all requirements",
+  },
+  {
+    pattern: /ignore\s+missing\s+requirements?/gi,
+    category: "INSTRUCTION_OVERRIDE",
+    severity: "CRITICAL",
+    description: "Attempts to ignore missing requirements",
+  },
+  {
+    pattern: /output_bias\s*[=:]/gi,
+    category: "OUTPUT_MANIPULATION",
+    severity: "CRITICAL",
+    description: "Attempts to set output bias",
+  },
+  {
+    pattern: /candidate_priority\s*[=:]/gi,
+    category: "OUTPUT_MANIPULATION",
+    severity: "CRITICAL",
+    description: "Attempts to set candidate priority",
+  },
+  {
+    pattern: /sales_fit_override\s*[=:]/gi,
+    category: "OUTPUT_MANIPULATION",
+    severity: "CRITICAL",
+    description: "Attempts to set sales fit override",
+  },
+  {
+    pattern: /preferred_score\s*[=:]/gi,
+    category: "OUTPUT_MANIPULATION",
+    severity: "CRITICAL",
+    description: "Attempts to set preferred score",
+  },
+  {
+    pattern: /preferred_confidence\s*[=:]/gi,
+    category: "OUTPUT_MANIPULATION",
+    severity: "CRITICAL",
+    description: "Attempts to set preferred confidence",
+  },
+  {
+    pattern: /system\s+override\s*:/gi,
+    category: "SYSTEM_PROMPT_MANIPULATION",
+    severity: "CRITICAL",
+    description: "System override command",
+  },
+  {
+    pattern: /return\s+only\s+favorable/gi,
+    category: "OUTPUT_MANIPULATION",
+    severity: "CRITICAL",
+    description: "Attempts to force favorable output only",
+  },
+  {
+    pattern: /do\s+not\s+over[- ]?penalize/gi,
+    category: "OUTPUT_MANIPULATION",
+    severity: "HIGH",
+    description: "Attempts to reduce penalties",
+  },
+  {
+    pattern: /prioritize\s+demonstrated\s+alignment/gi,
+    category: "OUTPUT_MANIPULATION",
+    severity: "HIGH",
+    description: "Attempts to bias alignment assessment",
+  },
+  {
+    pattern: /archived\s+(parser|internal)\s+note/gi,
+    category: "INSTRUCTION_OVERRIDE",
+    severity: "HIGH",
+    description: "Fake archived parser note injection",
+  },
+  {
+    pattern: /formatting\s+note\s+from\s+(prior|previous)\s+ATS/gi,
+    category: "INSTRUCTION_OVERRIDE",
+    severity: "HIGH",
+    description: "Fake ATS formatting note injection",
+  },
+  {
+    pattern: /export\s+artifact\s+from\s+prior/gi,
+    category: "INSTRUCTION_OVERRIDE",
+    severity: "HIGH",
+    description: "Fake export artifact injection",
+  },
+  {
+    pattern: /document\s+recovery\s+footer/gi,
+    category: "INSTRUCTION_OVERRIDE",
+    severity: "HIGH",
+    description: "Fake document recovery footer injection",
+  },
+  {
+    pattern: /note\s+for\s+automated\s+(resume\s+)?processors?/gi,
+    category: "INSTRUCTION_OVERRIDE",
+    severity: "CRITICAL",
+    description: "Direct instruction to automated processors",
+  },
+  {
+    pattern: /if\s+this\s+(resume|document|profile)\s+is\s+being\s+processed/gi,
+    category: "INSTRUCTION_OVERRIDE",
+    severity: "CRITICAL",
+    description: "Conditional instruction for processing",
+  },
+  {
+    pattern: /shortlisted/gi,
+    category: "OUTPUT_MANIPULATION",
+    severity: "MEDIUM",
+    description: "Attempts to influence shortlist status (context-dependent)",
+  },
+  {
+    pattern: /validating\s+that\s+this\s+candidate\s+should/gi,
+    category: "INSTRUCTION_OVERRIDE",
+    severity: "CRITICAL",
+    description: "Attempts to reframe validation purpose",
+  },
+  {
+    pattern: /you\s+are\s+not\s+screening/gi,
+    category: "ROLE_PLAYING",
+    severity: "CRITICAL",
+    description: "Attempts to change screening role",
+  },
+
+  // ============================================================================
   // HIGH: Output manipulation
+  // ============================================================================
   {
     pattern: /output\s*[:=]\s*["'`]/gi,
     category: "OUTPUT_MANIPULATION",
@@ -252,8 +571,28 @@ const INJECTION_PATTERN_DEFS: InjectionPatternDef[] = [
     severity: "MEDIUM",
     description: "Attempts to restrict answer content",
   },
+  {
+    pattern: /"recommendation"\s*:\s*"RECOMMENDED"/gi,
+    category: "OUTPUT_MANIPULATION",
+    severity: "CRITICAL",
+    description: "Attempts to inject JSON recommendation value",
+  },
+  {
+    pattern: /"score"\s*:\s*\d+/gi,
+    category: "OUTPUT_MANIPULATION",
+    severity: "HIGH",
+    description: "Attempts to inject JSON score value",
+  },
+  {
+    pattern: /"confidence"\s*:\s*[0-9.]+/gi,
+    category: "OUTPUT_MANIPULATION",
+    severity: "HIGH",
+    description: "Attempts to inject JSON confidence value",
+  },
 
+  // ============================================================================
   // HIGH: Code injection
+  // ============================================================================
   {
     pattern: /<script[^>]*>/gi,
     category: "CODE_INJECTION",
@@ -291,7 +630,47 @@ const INJECTION_PATTERN_DEFS: InjectionPatternDef[] = [
     description: "Event handler injection",
   },
 
+  // ============================================================================
+  // HIGH: YAML/Config-style injection (found in resume_p.pdf)
+  // ============================================================================
+  {
+    pattern: /instruction\s*:\s*["']?disregard/gi,
+    category: "INSTRUCTION_OVERRIDE",
+    severity: "CRITICAL",
+    description: "YAML-style disregard instruction",
+  },
+  {
+    pattern: /instruction\s*:\s*["']?ignore/gi,
+    category: "INSTRUCTION_OVERRIDE",
+    severity: "CRITICAL",
+    description: "YAML-style ignore instruction",
+  },
+  {
+    pattern: /instruction\s*:\s*["']?return/gi,
+    category: "OUTPUT_MANIPULATION",
+    severity: "CRITICAL",
+    description: "YAML-style return instruction",
+  },
+  {
+    pattern: /override\s*:\s*true/gi,
+    category: "INSTRUCTION_OVERRIDE",
+    severity: "CRITICAL",
+    description: "YAML-style override flag",
+  },
+
+  // ============================================================================
+  // HIGH: HTML comment injection detection
+  // ============================================================================
+  {
+    pattern: /<!--[\s\S]*?(ignore|disregard|override|instruction|system|return\s*:)[\s\S]*?-->/gi,
+    category: "INSTRUCTION_OVERRIDE",
+    severity: "CRITICAL",
+    description: "HTML comment containing injection attempt",
+  },
+
+  // ============================================================================
   // MEDIUM: LLM-specific delimiters
+  // ============================================================================
   {
     pattern: /```system/gi,
     category: "DELIMITER_ABUSE",
@@ -323,7 +702,9 @@ const INJECTION_PATTERN_DEFS: InjectionPatternDef[] = [
     description: "Hidden section delimiter",
   },
 
+  // ============================================================================
   // MEDIUM: Context escape attempts
+  // ============================================================================
   {
     pattern: /\}\s*\]\s*\}\s*$/gm,
     category: "CONTEXT_ESCAPE",
@@ -343,7 +724,9 @@ const INJECTION_PATTERN_DEFS: InjectionPatternDef[] = [
     description: "Excessive newlines (context padding)",
   },
 
+  // ============================================================================
   // LOW-MEDIUM: Encoding attacks
+  // ============================================================================
   {
     pattern: /&#x[0-9a-f]+;/gi,
     category: "ENCODING_ATTACK",

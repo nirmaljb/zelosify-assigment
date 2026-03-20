@@ -34,6 +34,29 @@ function log(entry: RecommendationLogEntry): void {
   console.log(JSON.stringify(entry));
 }
 
+function getUserFacingFailureReason(errorMessage: string): string {
+  const normalized = errorMessage.toLowerCase();
+
+  if (
+    normalized.includes("token") ||
+    normalized.includes("context length") ||
+    normalized.includes("maximum context") ||
+    normalized.includes("too many tokens")
+  ) {
+    return "Parser could not analyze this resume because the file exceeded the model token limit. Rerun the parser or try a smaller resume.";
+  }
+
+  if (
+    normalized.includes("timeout") ||
+    normalized.includes("timed out") ||
+    normalized.includes("deadline")
+  ) {
+    return "Parser timed out before the analysis completed. Rerun the parser.";
+  }
+
+  return "Parser could not analyze this resume. Rerun the parser.";
+}
+
 /**
  * Trigger recommendation processing for a profile.
  * 
@@ -201,6 +224,7 @@ async function processRecommendationAsync(profileId: number): Promise<void> {
     });
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
+    const userFacingReason = getUserFacingFailureReason(errorMsg);
     
     log({
       timestamp: new Date().toISOString(),
@@ -216,8 +240,12 @@ async function processRecommendationAsync(profileId: number): Promise<void> {
       await prisma.hiringProfile.update({
         where: { id: profileId },
         data: {
+          recommendationReason: userFacingReason,
+          recommendationLatencyMs: Date.now() - startTime,
           recommendationVersion: `failed-${Date.now()}`,
           reasoningMetadata: {
+            status: "failed",
+            userFacingReason,
             lastError: errorMsg,
             lastAttempt: new Date().toISOString(),
           },

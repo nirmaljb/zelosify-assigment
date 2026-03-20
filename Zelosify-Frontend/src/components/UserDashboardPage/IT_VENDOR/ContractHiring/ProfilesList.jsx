@@ -58,15 +58,15 @@ function getStatusBadgeClass(status) {
  */
 function ProfilesSkeleton() {
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {Array.from({ length: 3 }).map((_, i) => (
-        <div key={i} className="flex items-center gap-6 p-6 rounded-lg border border-border bg-card shadow-sm">
-          <Skeleton className="h-12 w-12 rounded-md bg-muted" />
-          <div className="flex-1 space-y-3">
-            <Skeleton className="h-5 w-64 bg-muted" />
+        <div key={i} className="flex items-center gap-4 p-4 rounded-lg border border-border bg-card shadow-sm">
+          <Skeleton className="h-10 w-10 rounded-md bg-muted" />
+          <div className="flex-1 space-y-2">
+            <Skeleton className="h-4 w-56 bg-muted" />
             <Skeleton className="h-3 w-40 bg-muted" />
           </div>
-          <Skeleton className="h-10 w-24 rounded-md bg-muted" />
+          <Skeleton className="h-9 w-20 rounded-md bg-muted" />
         </div>
       ))}
     </div>
@@ -185,67 +185,67 @@ export default function ProfilesList({ profiles, isLoading, onRefresh }) {
 
   return (
     <>
-      <div className="space-y-4">
+      <div className="space-y-3">
         {profiles.map((profile) => (
           <div
             key={profile.id}
-            className="flex items-center gap-6 p-6 rounded-lg border border-border bg-card hover:border-foreground/50 transition-all duration-300 shadow-sm group selection:bg-foreground selection:text-background"
+            className="flex items-center gap-4 p-4 rounded-lg border border-border bg-card hover:border-foreground/50 transition-all duration-300 shadow-sm group selection:bg-foreground selection:text-background"
           >
             {/* File Icon */}
-            <div className="flex-shrink-0 h-14 w-14 rounded-md bg-background border border-border flex items-center justify-center group-hover:bg-foreground group-hover:border-foreground transition-all duration-300">
-              <span className="text-[10px] font-bold text-muted-foreground group-hover:text-background uppercase tracking-widest">
+            <div className="flex-shrink-0 h-11 w-11 rounded-md bg-background border border-border flex items-center justify-center group-hover:bg-foreground group-hover:border-foreground transition-all duration-300">
+              <span className="text-[9px] font-bold text-muted-foreground group-hover:text-background uppercase tracking-widest">
                 {getFileExtension(profile.fileName)}
               </span>
             </div>
 
             {/* File Info */}
             <div className="flex-1 min-w-0">
-              <p className="text-base font-bold text-foreground truncate tracking-tight mb-2 uppercase group-hover:underline decoration-foreground decoration-2 underline-offset-4">
+              <p className="text-sm font-semibold text-foreground truncate tracking-tight mb-1.5 group-hover:underline decoration-foreground decoration-2 underline-offset-4">
                 {profile.fileName}
               </p>
-              <div className="flex items-center gap-3 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[9px] font-semibold text-muted-foreground uppercase tracking-widest">
                 <span>{formatDate(profile.uploadedAt)}</span>
                 <span className="text-border">/</span>
-                <span className={`px-2 py-0.5 text-[10px] rounded-full ${getStatusBadgeClass(profile.status)}`}>
+                <span className={`px-2 py-0.5 text-[9px] rounded-full ${getStatusBadgeClass(profile.status)}`}>
                   {profile.status}
                 </span>
               </div>
             </div>
 
-            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
               <Button
                 variant="outline"
                 size="icon"
-                className="h-10 w-10 rounded-none border-border bg-background hover:bg-foreground hover:text-background transition-all"
+                className="h-8 w-8 rounded-md border-border bg-background hover:bg-foreground hover:text-background transition-all"
                 onClick={() => handlePreviewClick(profile)}
                 disabled={previewLoading[profile.id]}
                 title="Preview"
               >
                 {previewLoading[profile.id] ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 ) : (
-                  <Eye className="h-4 w-4" />
+                  <Eye className="h-3.5 w-3.5" />
                 )}
               </Button>
 
               <Button
                 variant="outline"
                 size="icon"
-                className="h-10 w-10 rounded-none border-border bg-background hover:bg-foreground hover:text-background transition-all"
+                className="h-8 w-8 rounded-md border-border bg-background hover:bg-foreground hover:text-background transition-all"
                 onClick={() => handleDownloadClick(profile)}
                 title="Download"
               >
-                <Download className="h-4 w-4" />
+                <Download className="h-3.5 w-3.5" />
               </Button>
 
               <Button
                 variant="outline"
                 size="icon"
-                className="h-10 w-10 rounded-md border-border bg-background hover:bg-red-600 hover:border-red-600 hover:text-white transition-all"
+                className="h-8 w-8 rounded-md border-border bg-background hover:bg-red-600 hover:border-red-600 hover:text-white transition-all"
                 onClick={() => handleDeleteClick(profile)}
                 title="Delete"
               >
-                <Trash2 className="h-4 w-4" />
+                <Trash2 className="h-3.5 w-3.5" />
               </Button>
             </div>
           </div>

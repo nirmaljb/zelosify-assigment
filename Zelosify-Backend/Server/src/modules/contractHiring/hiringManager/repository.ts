@@ -50,6 +50,7 @@ export async function findOpeningsByHiringManager(
             id: true,
             recommended: true,
             status: true,
+            recommendationReason: true,
           },
         },
       },
@@ -172,14 +173,122 @@ export async function countProfilesByStatus(
     select: {
       recommended: true,
       status: true,
+      recommendationReason: true,
     },
   });
 
   return {
     total: profiles.length,
     recommended: profiles.filter(p => p.recommended === true).length,
-    pending: profiles.filter(p => p.status === "SUBMITTED").length,
+    pending: profiles.filter(
+      (p) => p.status === "SUBMITTED" && !(p.recommended === null && p.recommendationReason)
+    ).length,
     shortlisted: profiles.filter(p => p.status === "SHORTLISTED").length,
     rejected: profiles.filter(p => p.status === "REJECTED").length,
   };
+}
+
+// ============================================================================
+// Profile Queries by Status (across all openings)
+// ============================================================================
+
+/**
+ * Fetch all profiles with a specific status across all openings owned by the hiring manager.
+ * Includes opening details and recommendation data.
+ */
+export async function findProfilesByStatusForHiringManager(
+  hiringManagerId: string,
+  tenantId: string,
+  status: ProfileStatus,
+  options: { page: number; limit: number }
+): Promise<{
+  profiles: Array<hiringProfile & { opening: Opening }>;
+  total: number;
+}> {
+  const { page, limit } = options;
+  const skip = (page - 1) * limit;
+
+  const [profiles, total] = await Promise.all([
+    prisma.hiringProfile.findMany({
+      where: {
+        status,
+        isDeleted: false,
+        opening: {
+          hiringManagerId,
+          tenantId,
+        },
+      },
+      include: {
+        opening: {
+          select: {
+            id: true,
+            title: true,
+            location: true,
+            experienceMin: true,
+            experienceMax: true,
+            requiredSkills: true,
+          },
+        },
+      },
+      orderBy: [
+        { recommendationScore: "desc" },
+      ],
+      skip,
+      take: limit,
+    }),
+    prisma.hiringProfile.count({
+      where: {
+        status,
+        isDeleted: false,
+        opening: {
+          hiringManagerId,
+          tenantId,
+        },
+      },
+    }),
+  ]);
+
+  return { profiles: profiles as any, total };
+}
+
+/**
+ * Count profiles by status across all openings for a hiring manager
+ */
+export async function countAllProfilesByStatusForHiringManager(
+  hiringManagerId: string,
+  tenantId: string
+): Promise<{ shortlisted: number; rejected: number; total: number }> {
+  const [shortlisted, rejected, total] = await Promise.all([
+    prisma.hiringProfile.count({
+      where: {
+        status: "SHORTLISTED",
+        isDeleted: false,
+        opening: {
+          hiringManagerId,
+          tenantId,
+        },
+      },
+    }),
+    prisma.hiringProfile.count({
+      where: {
+        status: "REJECTED",
+        isDeleted: false,
+        opening: {
+          hiringManagerId,
+          tenantId,
+        },
+      },
+    }),
+    prisma.hiringProfile.count({
+      where: {
+        isDeleted: false,
+        opening: {
+          hiringManagerId,
+          tenantId,
+        },
+      },
+    }),
+  ]);
+
+  return { shortlisted, rejected, total };
 }

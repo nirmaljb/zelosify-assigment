@@ -3,6 +3,14 @@
 import { useState, useEffect, useCallback } from "react";
 import axiosInstance from "@/utils/Axios/AxiosInstance";
 
+function isRecommendationFailed(profile) {
+  return profile.recommended === null && Boolean(profile.recommendationReason);
+}
+
+function isRecommendationPending(profile) {
+  return profile.recommended === null && !isRecommendationFailed(profile);
+}
+
 /**
  * Hook for fetching profiles for a specific opening with recommendation data.
  * Also provides shortlist and reject actions.
@@ -159,7 +167,8 @@ export default function useHiringManagerProfiles(openingId) {
     recommended: profiles.filter((p) => p.recommended === true).length,
     borderline: profiles.filter((p) => p.recommended === false && p.recommendationScore >= 0.5).length,
     notRecommended: profiles.filter((p) => p.recommended === false && p.recommendationScore < 0.5).length,
-    pending: profiles.filter((p) => p.recommended === null).length,
+    pending: profiles.filter(isRecommendationPending).length,
+    failed: profiles.filter(isRecommendationFailed).length,
     shortlisted: profiles.filter((p) => p.status === "SHORTLISTED").length,
     rejected: profiles.filter((p) => p.status === "REJECTED").length,
   };

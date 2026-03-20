@@ -11,8 +11,16 @@ import {
   type HiringManagerProfileItem,
   type PaginatedResult,
   toHiringManagerProfileItem,
+  deriveRecommendationStatus,
 } from "../types.js";
 import { forceRetryRecommendation } from "../recommendation/trigger.js";
+
+function isRecommendationFailed(profile: {
+  recommended: boolean | null;
+  recommendationReason?: string | null;
+}): boolean {
+  return profile.recommended === null && Boolean(profile.recommendationReason);
+}
 
 // ============================================================================
 // Opening Operations
@@ -39,7 +47,7 @@ export async function getOpeningsForHiringManager(
       (p) => p.recommended === true
     ).length;
     const pendingCount = opening.hiringProfiles.filter(
-      (p) => p.status === "SUBMITTED"
+      (p) => p.status === "SUBMITTED" && !isRecommendationFailed(p)
     ).length;
 
     return {
@@ -249,4 +257,84 @@ export async function retryProfileRecommendation(
   }
 
   return { success: true, message: "Recommendation retry initiated" };
+}
+
+// ============================================================================
+// Profile Views by Status (across all openings)
+// ============================================================================
+
+/**
+ * Profile item with opening details for cross-opening views
+ */
+export interface HiringManagerProfileWithOpening extends HiringManagerProfileItem {
+  opening: {
+    id: string;
+    title: string;
+    location: string | null;
+    experienceMin: number;
+    experienceMax: number | null;
+    requiredSkills: string[];
+  };
+}
+
+/**
+ * Get paginated profiles by status across all openings owned by the hiring manager.
+ * Used for the global "Shortlisted" and "Rejected" views.
+ */
+export async function getProfilesByStatusForHiringManager(
+  userId: string,
+  tenantId: string,
+  status: "SHORTLISTED" | "REJECTED",
+  options: { page: number; limit: number }
+): Promise<PaginatedResult<HiringManagerProfileWithOpening>> {
+  const { profiles, total } = await repository.findProfilesByStatusForHiringManager(
+    userId,
+    tenantId,
+    status,
+    options
+  );
+
+  const data: HiringManagerProfileWithOpening[] = profiles.map((profile) => ({
+    id: profile.id,
+    s3Key: profile.s3Key,
+    fileName: profile.originalFileName || profile.s3Key.split("/").pop() || "unknown",
+    submittedAt: profile.submittedAt,
+    status: profile.status,
+    uploadedBy: profile.uploadedBy,
+    recommended: profile.recommended,
+    recommendationScore: profile.recommendationScore,
+    recommendationReason: profile.recommendationReason,
+    recommendationLatencyMs: profile.recommendationLatencyMs,
+    recommendationConfidence: profile.recommendationConfidence,
+    recommendedAt: profile.recommendedAt,
+    recommendationStatus: deriveRecommendationStatus(profile),
+    opening: {
+      id: profile.opening.id,
+      title: profile.opening.title,
+      location: profile.opening.location,
+      experienceMin: profile.opening.experienceMin,
+      experienceMax: profile.opening.experienceMax,
+      requiredSkills: profile.opening.requiredSkills,
+    },
+  }));
+
+  return {
+    data,
+    pagination: {
+      page: options.page,
+      limit: options.limit,
+      total,
+      totalPages: Math.ceil(total / options.limit),
+    },
+  };
+}
+
+/**
+ * Get counts for shortlisted and rejected profiles across all openings.
+ */
+export async function getProfileCountsForHiringManager(
+  userId: string,
+  tenantId: string
+): Promise<{ shortlisted: number; rejected: number; total: number }> {
+  return repository.countAllProfilesByStatusForHiringManager(userId, tenantId);
 }

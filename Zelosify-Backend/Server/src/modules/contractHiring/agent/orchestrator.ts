@@ -251,12 +251,26 @@ export class AgentOrchestrator {
     experienceMax: number | null;
     location: string | null;
   }): string {
+    const experienceRange = opening.experienceMax 
+      ? `${opening.experienceMin}-${opening.experienceMax} years`
+      : `${opening.experienceMin}+ years`;
+    
+    const skillsList = opening.requiredSkills.length > 0 
+      ? opening.requiredSkills.join(", ")
+      : "No specific skills listed";
+    
+    const locationType = opening.location?.toLowerCase().includes("remote") ? "REMOTE" : "ONSITE";
+    
     return `
-Position: ${opening.title}
-Description: ${opening.description || "Not specified"}
-Required Skills: ${opening.requiredSkills.join(", ") || "Not specified"}
-Experience Required: ${opening.experienceMin}${opening.experienceMax ? `-${opening.experienceMax}` : "+"} years
-Location: ${opening.location || "Not specified"}
+**Position:** ${opening.title}
+
+**Description:** ${opening.description || "No description provided"}
+
+**Required Skills:** ${skillsList}
+
+**Experience Required:** ${experienceRange}
+
+**Location:** ${opening.location || "Not specified"} (${locationType})
 `.trim();
   }
 
@@ -288,6 +302,9 @@ Location: ${opening.location || "Not specified"}
     openingContext: string,
     requirements: OpeningRequirements
   ): Promise<AgentResult> {
+    // Determine location type from opening
+    const locationType = opening.location?.toLowerCase().includes("remote") ? "REMOTE" : "ONSITE";
+    
     const messages: LLMMessage[] = [
       {
         role: "system",
@@ -295,12 +312,39 @@ Location: ${opening.location || "Not specified"}
       },
       {
         role: "user",
-        content: `Please analyze the candidate profile (ID: ${profileId}) and provide a recommendation.
+        content: `Evaluate the candidate for the "${opening.title}" position.
 
-The resume is stored at S3 key: ${profile.s3Key}
-Original filename: ${profile.originalFileName || "unknown"}
+## Candidate Profile
+- **Profile ID:** ${profileId}
+- **Resume S3 Key:** ${profile.s3Key}
+- **Original Filename:** ${profile.originalFileName || "unknown"}
 
-Start by parsing the resume, then normalize the skills, and finally calculate the score.`,
+## Job Requirements (for calculate_score)
+- **Required Skills:** ${JSON.stringify(opening.requiredSkills)}
+- **Experience Range:** ${opening.experienceMin}${opening.experienceMax ? `-${opening.experienceMax}` : "+"} years
+- **Location:** ${opening.location || "Unknown"}
+- **Location Type:** ${locationType}
+
+## Instructions
+Please follow these steps in order:
+
+1. **Call parse_resume** with profileId=${profileId} and s3Key="${profile.s3Key}"
+   - This extracts: experienceYears, skills, location, education, keywords
+
+2. **Call normalize_skills** with the skills array from step 1
+   - This standardizes skill names for accurate matching
+
+3. **Call calculate_score** with ALL these parameters:
+   - candidateExperience: from parse_resume
+   - candidateSkills: normalized skills from step 2
+   - candidateLocation: from parse_resume
+   - requiredSkills: ${JSON.stringify(opening.requiredSkills)}
+   - experienceMin: ${opening.experienceMin}
+   - experienceMax: ${opening.experienceMax ?? "null"}
+   - openingLocation: "${opening.location || "Unknown"}"
+   - locationType: "${locationType}"
+
+After all tools complete, provide your final assessment.`,
       },
     ];
 

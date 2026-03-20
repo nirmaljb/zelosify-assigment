@@ -62,6 +62,40 @@ function getStatusBadgeClass(status) {
   }
 }
 
+function normalizeRequiredSkills(requiredSkills) {
+  if (Array.isArray(requiredSkills)) {
+    return requiredSkills.filter(Boolean);
+  }
+
+  if (typeof requiredSkills !== "string") {
+    return [];
+  }
+
+  const trimmed = requiredSkills.trim();
+
+  if (!trimmed) {
+    return [];
+  }
+
+  if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+    try {
+      const parsed = JSON.parse(trimmed);
+      return Array.isArray(parsed) ? parsed.filter(Boolean) : [];
+    } catch {
+      return trimmed
+        .replace(/^\[|\]$/g, "")
+        .split(",")
+        .map((skill) => skill.replace(/^["']|["']$/g, "").trim())
+        .filter(Boolean);
+    }
+  }
+
+  return trimmed
+    .split(",")
+    .map((skill) => skill.trim())
+    .filter(Boolean);
+}
+
 /**
  * Skeleton loader for opening details
  */
@@ -130,6 +164,7 @@ export default function OpeningDetailLayout({ openingId }) {
   const router = useRouter();
 
   const { opening, profiles, isLoading, error, refresh } = useOpeningDetail(openingId);
+  const requiredSkills = normalizeRequiredSkills(opening?.requiredSkills);
 
   const handleUploadComplete = useCallback(
     (uploadedCount) => {
@@ -233,14 +268,14 @@ export default function OpeningDetailLayout({ openingId }) {
                   </div>
                 )}
 
-                {opening.requiredSkills && opening.requiredSkills.length > 0 && (
+                {requiredSkills.length > 0 && (
                   <div className="p-8 bg-card border border-border rounded-lg shadow-sm">
                     <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-6">Required Skills</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {opening.requiredSkills.map((skill, index) => (
+                    <div className="flex flex-wrap gap-2.5">
+                      {requiredSkills.map((skill, index) => (
                         <span
                           key={index}
-                          className="px-3 py-1.5 text-[10px] font-bold bg-muted text-foreground rounded-md uppercase tracking-widest"
+                          className="inline-flex items-center rounded-full border border-border bg-secondary px-3 py-1 text-[11px] font-semibold tracking-tight text-secondary-foreground shadow-sm"
                         >
                           {skill}
                         </span>

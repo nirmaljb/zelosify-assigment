@@ -3,6 +3,10 @@
  * 
  * Routes for HIRING_MANAGER contract hiring operations.
  * All routes require authentication and HIRING_MANAGER role.
+ * 
+ * IMPORTANT: Static routes (/profiles/shortlisted, /profiles/rejected, /profiles/counts)
+ * must be defined BEFORE parameterized routes (/profiles/:id/*) to avoid
+ * Express matching "shortlisted" as an :id parameter.
  */
 
 import { Router, type RequestHandler } from "express";
@@ -17,6 +21,10 @@ const authMiddleware: RequestHandler[] = [
   authenticateUser as RequestHandler,
   authorizeRole("HIRING_MANAGER") as RequestHandler,
 ];
+
+// ============================================================================
+// Opening Routes
+// ============================================================================
 
 /**
  * GET /openings
@@ -49,6 +57,62 @@ router.get(
     }
   }) as RequestHandler
 );
+
+// ============================================================================
+// Static Profile Routes (must come before parameterized routes)
+// ============================================================================
+
+/**
+ * GET /profiles/shortlisted
+ * Fetch all shortlisted profiles across all openings
+ */
+router.get(
+  "/profiles/shortlisted",
+  ...authMiddleware,
+  (async (req, res, next) => {
+    try {
+      await hiringManagerController.getShortlistedProfiles(req as any, res);
+    } catch (error) {
+      next(error);
+    }
+  }) as RequestHandler
+);
+
+/**
+ * GET /profiles/rejected
+ * Fetch all rejected profiles across all openings
+ */
+router.get(
+  "/profiles/rejected",
+  ...authMiddleware,
+  (async (req, res, next) => {
+    try {
+      await hiringManagerController.getRejectedProfiles(req as any, res);
+    } catch (error) {
+      next(error);
+    }
+  }) as RequestHandler
+);
+
+/**
+ * GET /profiles/counts
+ * Get counts for shortlisted and rejected profiles
+ */
+router.get(
+  "/profiles/counts",
+  ...authMiddleware,
+  (async (req, res, next) => {
+    try {
+      await hiringManagerController.getProfileCounts(req as any, res);
+    } catch (error) {
+      next(error);
+    }
+  }) as RequestHandler
+);
+
+// ============================================================================
+// Parameterized Profile Routes (must come after static routes)
+// ============================================================================
 
 /**
  * POST /profiles/:id/shortlist

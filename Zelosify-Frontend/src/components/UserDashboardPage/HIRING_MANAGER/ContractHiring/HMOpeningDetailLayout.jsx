@@ -20,6 +20,14 @@ import { Skeleton } from "@/components/UI/shadcn/skeleton";
 import useHiringManagerProfiles from "@/hooks/ContractHiring/useHiringManagerProfiles";
 import ProfileCard from "./ProfileCard";
 
+function isRecommendationFailed(profile) {
+  return profile.recommended === null && Boolean(profile.recommendationReason);
+}
+
+function isRecommendationPending(profile) {
+  return profile.recommended === null && !isRecommendationFailed(profile);
+}
+
 /**
  * Stats pill component
  */
@@ -40,15 +48,23 @@ function FilterChip({ label, isActive, onClick, count }) {
   return (
     <button
       onClick={onClick}
-      className={`px-4 py-2 text-xs font-bold uppercase tracking-widest rounded-md border transition-all ${
+      className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] transition-all ${
         isActive
           ? "bg-foreground text-background border-foreground shadow-sm"
           : "bg-card text-muted-foreground border-border hover:border-foreground/50 hover:text-foreground"
       }`}
     >
-      {label}
+      <span>{label}</span>
       {count !== undefined && (
-        <span className="ml-1.5 text-muted-foreground">({count})</span>
+        <span
+          className={`rounded-full px-1.5 py-0.5 text-[9px] font-semibold tracking-normal ${
+            isActive
+              ? "bg-background/15 text-background"
+              : "bg-muted text-muted-foreground"
+          }`}
+        >
+          {count}
+        </span>
       )}
     </button>
   );
@@ -212,7 +228,9 @@ export default function HMOpeningDetailLayout({ openingId }) {
           (p) => p.recommended === false && p.recommendationScore < 0.5
         );
       case "pending":
-        return profiles.filter((p) => p.recommended === null);
+        return profiles.filter(isRecommendationPending);
+      case "failed":
+        return profiles.filter(isRecommendationFailed);
       case "shortlisted":
         return profiles.filter((p) => p.status === "SHORTLISTED");
       case "rejected":
@@ -304,13 +322,21 @@ export default function HMOpeningDetailLayout({ openingId }) {
                 value={stats.pending}
                 colorClass="text-muted-foreground"
               />
+              <StatsPill
+                icon={AlertCircle}
+                label="needs retry"
+                value={stats.failed}
+                colorClass="text-red-600 dark:text-red-400"
+              />
             </div>
           )}
 
           {/* Filters */}
           {!isLoading && profiles.length > 0 && (
-            <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-2">
-              <Filter className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            <div className="mb-6 flex flex-wrap items-center gap-2">
+              <div className="mr-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border bg-card">
+                <Filter className="h-3.5 w-3.5 text-muted-foreground" />
+              </div>
               <FilterChip
                 label="All"
                 isActive={filter === "all"}
@@ -340,6 +366,12 @@ export default function HMOpeningDetailLayout({ openingId }) {
                 isActive={filter === "pending"}
                 onClick={() => setFilter("pending")}
                 count={stats.pending}
+              />
+              <FilterChip
+                label="Needs Retry"
+                isActive={filter === "failed"}
+                onClick={() => setFilter("failed")}
+                count={stats.failed}
               />
               <div className="w-px h-6 bg-border mx-2" />
               <FilterChip

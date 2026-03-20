@@ -13,7 +13,25 @@ import type { ToolDefinition } from "./types.js";
 
 export const RESUME_PARSER_TOOL: ToolDefinition = {
   name: "parse_resume",
-  description: "Parse a candidate resume file (PDF or PPTX) and extract structured information including experience, skills, education, and location. Call this tool when you need to analyze a candidate's resume.",
+  description: `Parse a candidate's resume file (PDF or PPTX) and extract structured information.
+
+MUST be called FIRST before any other tools.
+
+Returns:
+- experienceYears: Total years of professional experience (number)
+- skills: Array of technical skills found in the resume
+- location: Candidate's location or "Unknown"
+- education: Array of degrees/certifications
+- keywords: Action verbs and impact indicators
+
+Example output:
+{
+  "experienceYears": 5,
+  "skills": ["JavaScript", "React", "Node.js", "AWS"],
+  "location": "San Francisco",
+  "education": ["Bachelor of Science", "Stanford"],
+  "keywords": ["developed", "led", "scalable"]
+}`,
   parameters: {
     type: "object",
     properties: {
@@ -32,7 +50,11 @@ export const RESUME_PARSER_TOOL: ToolDefinition = {
 
 export const FEATURE_EXTRACTOR_TOOL: ToolDefinition = {
   name: "extract_features",
-  description: "Extract a feature vector from parsed resume data for matching against opening requirements. Call this after parsing the resume to prepare for scoring.",
+  description: `Extract a feature vector from parsed resume data for matching against opening requirements.
+
+This is an OPTIONAL tool - you can skip directly to calculate_score if you have the data from parse_resume.
+
+Use this when you need to prepare or validate the feature data before scoring.`,
   parameters: {
     type: "object",
     properties: {
@@ -60,13 +82,25 @@ export const FEATURE_EXTRACTOR_TOOL: ToolDefinition = {
 
 export const SKILL_NORMALIZER_TOOL: ToolDefinition = {
   name: "normalize_skills",
-  description: "Normalize a list of skills to standard forms for accurate matching. For example, 'JS' becomes 'JavaScript', 'React.js' becomes 'React'. Call this to ensure consistent skill comparison.",
+  description: `Normalize a list of skills to standard forms for accurate matching.
+
+Call this AFTER parse_resume with the skills array from the parsed data.
+
+Normalization examples:
+- "JS" → "JavaScript"
+- "React.js" → "React"
+- "node" → "Node.js"
+- "k8s" → "Kubernetes"
+- "TS" → "TypeScript"
+- "postgres" → "PostgreSQL"
+
+This ensures consistent skill comparison between candidate and job requirements.`,
   parameters: {
     type: "object",
     properties: {
       skills: {
         type: "array",
-        description: "List of raw skills to normalize",
+        description: "List of raw skills to normalize (from parse_resume output)",
         items: { type: "string" },
       },
     },
@@ -76,43 +110,72 @@ export const SKILL_NORMALIZER_TOOL: ToolDefinition = {
 
 export const SCORING_ENGINE_TOOL: ToolDefinition = {
   name: "calculate_score",
-  description: "Calculate the final recommendation score using the deterministic scoring formula. This tool MUST be called to get the official score - do not calculate scores manually. Returns skillMatchScore, experienceMatchScore, locationMatchScore, and finalScore.",
+  description: `Calculate the final recommendation score using the DETERMINISTIC scoring formula.
+
+**CRITICAL:** This tool MUST be called to get the official score. DO NOT calculate scores manually.
+
+Formula: FinalScore = (0.5 × skillMatchScore) + (0.3 × experienceMatchScore) + (0.2 × locationMatchScore)
+
+Decision thresholds:
+- ≥ 0.75: RECOMMENDED
+- 0.50 - 0.74: BORDERLINE  
+- < 0.50: NOT_RECOMMENDED
+
+Required parameters (get these from parse_resume and normalize_skills):
+- candidateExperience: Number of years from resume
+- candidateSkills: Normalized skills array
+- candidateLocation: Location from resume (or "Unknown")
+- requiredSkills: Skills required by the job opening
+- experienceMin: Minimum required years
+- experienceMax: Maximum required years (can be null)
+- openingLocation: Job location
+- locationType: "REMOTE" or "ONSITE"
+
+Returns:
+{
+  "skillMatchScore": 0.8,
+  "experienceMatchScore": 1.0,
+  "locationMatchScore": 1.0,
+  "finalScore": 0.82,
+  "decision": "RECOMMENDED",
+  "explanation": "Strong skill match (80%), experience within range, location compatible."
+}`,
   parameters: {
     type: "object",
     properties: {
       candidateExperience: {
         type: "number",
-        description: "Candidate's years of experience",
+        description: "Candidate's years of experience (from parse_resume.experienceYears)",
       },
       candidateSkills: {
         type: "array",
-        description: "Candidate's normalized skills",
+        description: "Candidate's NORMALIZED skills (from normalize_skills output)",
         items: { type: "string" },
       },
       candidateLocation: {
         type: "string",
-        description: "Candidate's location",
+        description: "Candidate's location (from parse_resume.location)",
       },
       requiredSkills: {
         type: "array",
-        description: "Required skills for the opening",
+        description: "Required skills from the job opening",
         items: { type: "string" },
       },
       experienceMin: {
         type: "number",
-        description: "Minimum required experience",
+        description: "Minimum required years of experience from job opening",
       },
       experienceMax: {
         type: "number",
-        description: "Maximum required experience (null if no max)",
+        description: "Maximum required years of experience (null if no upper limit)",
       },
       openingLocation: {
         type: "string",
-        description: "Opening location",
+        description: "Job opening location",
       },
       locationType: {
         type: "string",
-        description: "REMOTE or ONSITE",
+        description: "Whether the job is REMOTE or ONSITE",
         enum: ["REMOTE", "ONSITE"],
       },
     },

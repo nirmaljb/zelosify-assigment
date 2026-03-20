@@ -34,9 +34,47 @@ function truncateText(text, maxLength = 30) {
 }
 
 /**
+ * Check if recommendation failed
+ * Uses recommendationStatus if available, falls back to heuristic
+ */
+function isRecommendationFailed(profile) {
+  // Prefer explicit status from backend
+  if (profile.recommendationStatus) {
+    return profile.recommendationStatus === "failed";
+  }
+  // Fallback: null recommendation with a reason indicates failure
+  return profile.recommended === null && Boolean(profile.recommendationReason);
+}
+
+/**
+ * Check if recommendation is still processing
+ */
+function isRecommendationProcessing(profile) {
+  // Prefer explicit status from backend
+  if (profile.recommendationStatus) {
+    return profile.recommendationStatus === "pending" || profile.recommendationStatus === "processing";
+  }
+  // Fallback: null recommendation without a reason indicates processing
+  return profile.recommended === null && !profile.recommendationReason;
+}
+
+/**
  * Get recommendation badge based on score and status
  */
-function getRecommendationBadge(recommended, score) {
+function getRecommendationBadge(profile) {
+  if (isRecommendationFailed(profile)) {
+    return {
+      label: "Parser Error",
+      icon: AlertCircle,
+      bgClass: "bg-red-500/10",
+      textClass: "text-red-500",
+      iconClass: "text-red-500",
+      borderClass: "border-red-500/30",
+    };
+  }
+
+  const { recommended, recommendationScore: score } = profile;
+
   if (recommended === null) {
     return {
       label: "Processing",
@@ -185,10 +223,7 @@ export default function ProfileCard({
   const [isRetrying, setIsRetrying] = useState(false);
   const [isJustificationOpen, setIsJustificationOpen] = useState(false);
 
-  const recommendation = getRecommendationBadge(
-    profile.recommended,
-    profile.recommendationScore
-  );
+  const recommendation = getRecommendationBadge(profile);
   const status = getStatusBadge(profile.status);
   const RecommendationIcon = recommendation.icon;
 
@@ -210,7 +245,8 @@ export default function ProfileCard({
     }
   };
 
-  const isProcessing = profile.recommended === null;
+  const isFailed = isRecommendationFailed(profile);
+  const isProcessing = profile.recommended === null && !isFailed;
   const isActioned = profile.status === "SHORTLISTED" || profile.status === "REJECTED";
   const truncatedFileName = truncateText(profile.fileName, 30);
   const isFileNameTruncated = profile.fileName && profile.fileName.length > 30;
@@ -241,13 +277,19 @@ export default function ProfileCard({
           </div>
 
           {/* Score ring */}
-          {!isProcessing && (
+          {!isProcessing && !isFailed && (
             <ScoreRing score={profile.recommendationScore} />
           )}
           {isProcessing && (
             <div className="flex items-center gap-2 text-zinc-500">
               <Loader2 className="h-4 w-4 animate-spin" />
               <span className="text-xs font-bold uppercase tracking-widest">Analyzing</span>
+            </div>
+          )}
+          {isFailed && (
+            <div className="flex items-center gap-2 text-red-500">
+              <AlertCircle className="h-4 w-4" />
+              <span className="text-xs font-bold uppercase tracking-widest">Parser Error</span>
             </div>
           )}
         </div>
@@ -269,7 +311,20 @@ export default function ProfileCard({
         </div>
 
         {/* AI Explanation with Read More */}
-        {profile.recommendationReason && (
+        {isFailed && (
+          <div className="flex items-start gap-2 mb-3 rounded-md border border-red-500/20 bg-red-500/10 p-3">
+            <AlertCircle className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
+            <div className="min-w-0">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-red-500 mb-1">
+                Analysis failed
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {profile.recommendationReason}
+              </p>
+            </div>
+          </div>
+        )}
+        {!isFailed && profile.recommendationReason && (
           <div className="flex items-start gap-2 mb-3">
             <p className="text-xs text-muted-foreground line-clamp-2 flex-1">
               {profile.recommendationReason}
@@ -287,7 +342,7 @@ export default function ProfileCard({
         )}
 
         {/* Stats Row */}
-        {!isProcessing && (
+        {!isProcessing && !isFailed && (
           <div className="flex items-center gap-4 mb-4 text-xs text-muted-foreground">
             {profile.recommendationConfidence && (
               <div className="flex items-center gap-1">
@@ -310,23 +365,42 @@ export default function ProfileCard({
 
         {/* Action Buttons */}
         <div className="flex items-center gap-2">
-          {/* Retry button - always visible per user preference */}
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={handleRetry}
-            disabled={isRetrying || isActionLoading === profile.id}
-            className="h-10 px-3 bg-background hover:bg-muted border-border transition-colors rounded-md"
-            title="Retry AI recommendation"
-          >
-            {isRetrying ? (
-              <Loader2 className="h-3 w-3 animate-spin" />
-            ) : (
-              <RefreshCw className="h-3 w-3" />
-            )}
-          </Button>
+          {isFailed ? (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleRetry}
+              disabled={isRetrying || isActionLoading === profile.id}
+              className="flex-1 h-10 bg-background hover:bg-red-500/10 border-red-500/30 text-red-500 hover:text-red-500 transition-colors rounded-md font-bold uppercase tracking-widest text-[10px]"
+              title="Rerun parser"
+            >
+              {isRetrying ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                <>
+                  <RefreshCw className="h-3.5 w-3.5 mr-2" />
+                  Rerun Parser
+                </>
+              )}
+            </Button>
+          ) : (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleRetry}
+              disabled={isRetrying || isActionLoading === profile.id}
+              className="h-10 px-3 bg-background hover:bg-muted border-border transition-colors rounded-md"
+              title="Retry AI recommendation"
+            >
+              {isRetrying ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                <RefreshCw className="h-3 w-3" />
+              )}
+            </Button>
+          )}
 
-          {!isActioned && !isProcessing && (
+          {!isActioned && !isProcessing && !isFailed && (
             <>
               <Button
                 size="sm"
@@ -398,7 +472,7 @@ export default function ProfileCard({
             </div>
 
             {/* Score and confidence */}
-            {!isProcessing && (
+            {!isProcessing && !isFailed && (
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-muted-foreground">Score:</span>

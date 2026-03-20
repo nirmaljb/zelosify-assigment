@@ -115,6 +115,8 @@ export interface HiringManagerProfileItem {
   recommendationLatencyMs: number | null;
   recommendationConfidence: number | null;
   recommendedAt: Date | null;
+  // Derived status field for UI: "pending" | "processing" | "completed" | "failed"
+  recommendationStatus: "pending" | "processing" | "completed" | "failed";
 }
 
 // ============================================================================
@@ -212,9 +214,33 @@ export function toVendorProfileItem(profile: hiringProfile): VendorProfileItem {
 }
 
 /**
+ * Derive recommendation status from profile fields
+ */
+export function deriveRecommendationStatus(profile: {
+  recommended: boolean | null;
+  recommendedAt: Date | null;
+  recommendationVersion: string | null;
+  recommendationReason: string | null;
+  recommendationLatencyMs: number | null;
+}): "pending" | "processing" | "completed" | "failed" {
+  if (profile.recommended !== null && profile.recommendedAt !== null) {
+    return "completed";
+  }
+  if (profile.recommendationVersion?.startsWith("failed-")) {
+    return "failed";
+  }
+  if (profile.recommendationReason || profile.recommendationLatencyMs) {
+    return "processing";
+  }
+  return "pending";
+}
+
+/**
  * Map profile to hiring manager DTO (includes recommendation fields)
  */
 export function toHiringManagerProfileItem(profile: hiringProfile): HiringManagerProfileItem {
+  const recommendationStatus = deriveRecommendationStatus(profile);
+
   return {
     id: profile.id,
     s3Key: profile.s3Key,
@@ -228,5 +254,6 @@ export function toHiringManagerProfileItem(profile: hiringProfile): HiringManage
     recommendationLatencyMs: profile.recommendationLatencyMs,
     recommendationConfidence: profile.recommendationConfidence,
     recommendedAt: profile.recommendedAt,
+    recommendationStatus,
   };
 }
