@@ -19,6 +19,7 @@ import { Button } from "@/components/UI/shadcn/button";
 import { Skeleton } from "@/components/UI/shadcn/skeleton";
 import useHiringManagerProfiles from "@/hooks/ContractHiring/useHiringManagerProfiles";
 import ProfileCard from "./ProfileCard";
+import ErrorBoundary from "@/components/UserDashboardPage/ContractHiring/ErrorBoundary";
 
 function isRecommendationFailed(profile) {
   return profile.recommended === null && Boolean(profile.recommendationReason);
@@ -36,7 +37,7 @@ function StatsPill({ icon: Icon, label, value, colorClass }) {
     <div className={`flex items-center gap-3 px-4 py-2 rounded-lg bg-card border border-border shadow-sm ${colorClass}`}>
       <Icon className="h-4 w-4" />
       <span className="text-sm font-bold tracking-tight">{value}</span>
-      <span className="text-xs text-zinc-500 uppercase tracking-widest">{label}</span>
+      <span className="text-xs text-muted-foreground uppercase tracking-widest">{label}</span>
     </div>
   );
 }
@@ -397,19 +398,21 @@ export default function HMOpeningDetailLayout({ openingId }) {
           ) : filteredProfiles.length === 0 ? (
             <EmptyState filter={filter} />
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredProfiles.map((profile) => (
-                <ProfileCard
-                  key={profile.id}
-                  profile={profile}
-                  onShortlist={shortlistProfile}
-                  onReject={rejectProfile}
-                  onDownload={handleDownload}
-                  onRetry={retryRecommendation}
-                  isActionLoading={actionLoading}
-                />
-              ))}
-            </div>
+            <ErrorBoundary>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredProfiles.map((profile) => (
+                  <ProfileCard
+                    key={profile.id}
+                    profile={profile}
+                    onShortlist={shortlistProfile}
+                    onReject={rejectProfile}
+                    onDownload={handleDownload}
+                    onRetry={retryRecommendation}
+                    isActionLoading={actionLoading}
+                  />
+                ))}
+              </div>
+            </ErrorBoundary>
           )}
         </div>
       </div>

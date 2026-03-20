@@ -23,6 +23,7 @@ import {
 import { Button } from "@/components/UI/shadcn/button";
 import { Skeleton } from "@/components/UI/shadcn/skeleton";
 import useHiringManagerOpenings from "@/hooks/ContractHiring/useHiringManagerOpenings";
+import ErrorBoundary from "@/components/UserDashboardPage/ContractHiring/ErrorBoundary";
 
 /**
  * Format date to display format
@@ -241,6 +242,7 @@ export default function HMOpeningsListLayout() {
     <div className="flex min-h-screen bg-background text-foreground selection:bg-foreground selection:text-background">
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-7xl mx-auto px-8 py-12">
+          <ErrorBoundary>
           {/* Header */}
           <div className="flex items-center justify-between mb-8">
             <div>
@@ -293,7 +295,7 @@ export default function HMOpeningsListLayout() {
           {/* Search */}
           <div className="mb-6">
             <div className="relative max-w-sm">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-zinc-500" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <input
                 type="text"
                 placeholder="Search openings..."
@@ -400,6 +402,7 @@ export default function HMOpeningsListLayout() {
               </>
             )}
           </div>
+          </ErrorBoundary>
         </div>
       </div>
     </div>

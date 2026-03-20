@@ -43,13 +43,13 @@ function getFileExtension(fileName) {
 function getStatusBadgeClass(status) {
   switch (status) {
     case "SUBMITTED":
-      return "bg-zinc-800 text-zinc-300 border-transparent font-bold uppercase tracking-widest";
+      return "bg-muted text-muted-foreground border-transparent font-bold uppercase tracking-widest";
     case "SHORTLISTED":
       return "bg-emerald-500/20 text-emerald-500 border-transparent font-bold uppercase tracking-widest";
     case "REJECTED":
       return "bg-red-500/20 text-red-500 border-transparent font-bold uppercase tracking-widest";
     default:
-      return "bg-zinc-800 text-zinc-400 border-transparent font-bold uppercase tracking-widest";
+      return "bg-muted text-muted-foreground border-transparent font-bold uppercase tracking-widest";
   }
 }
 

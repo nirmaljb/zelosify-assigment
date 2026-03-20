@@ -156,7 +156,7 @@ function ScoreRing({ score, size = 48 }) {
           stroke="currentColor"
           strokeWidth="4"
           fill="none"
-          className="text-zinc-900"
+          className="text-muted"
         />
         {/* Progress circle */}
         <circle
