@@ -23,7 +23,7 @@ import {
 import { Button } from "@/components/UI/shadcn/button";
 import { Skeleton } from "@/components/UI/shadcn/skeleton";
 import useHiringManagerOpenings from "@/hooks/ContractHiring/useHiringManagerOpenings";
-import ErrorBoundary from "@/components/UserDashboardPage/ContractHiring/ErrorBoundary";
+import ErrorBoundary from "./ErrorBoundary";
 
 /**
  * Format date to display format

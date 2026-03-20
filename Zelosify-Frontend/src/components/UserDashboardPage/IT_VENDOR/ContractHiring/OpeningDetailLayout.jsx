@@ -17,6 +17,7 @@ import { Skeleton } from "@/components/UI/shadcn/skeleton";
 import { Separator } from "@/components/UI/shadcn/separator";
 import useOpeningDetail from "@/hooks/ContractHiring/useOpeningDetail";
 import useFileUpload from "@/hooks/ContractHiring/useFileUpload";
+import ErrorBoundary from "./ErrorBoundary";
 import FileUploadZone from "./FileUploadZone";
 import ProfilesList from "./ProfilesList";
 
@@ -58,7 +59,7 @@ function getStatusBadgeClass(status) {
     case "ON_HOLD":
       return "bg-amber-500/20 text-amber-500 border-transparent font-bold uppercase tracking-widest";
     default:
-      return "bg-zinc-800 text-zinc-300 border-transparent font-bold uppercase tracking-widest";
+      return "bg-muted text-muted-foreground border-transparent font-bold uppercase tracking-widest";
   }
 }
 
@@ -125,8 +126,8 @@ function DetailsSkeleton() {
 function ErrorState({ message, onRetry }) {
   return (
     <div className="flex flex-col items-center justify-center py-12 text-center">
-      <div className="rounded-full bg-red-100 dark:bg-red-900/30 p-3 mb-4">
-        <RefreshCw className="h-6 w-6 text-red-600 dark:text-red-400" />
+      <div className="rounded-full bg-destructive/10 p-3 mb-4">
+        <RefreshCw className="h-6 w-6 text-destructive" />
       </div>
       <h3 className="text-lg font-medium text-foreground mb-2">
         Failed to load opening
@@ -147,7 +148,7 @@ function InfoItem({ icon: Icon, label, value }) {
   return (
     <div className="flex items-start gap-4 p-4 bg-muted/40 border border-border rounded-lg shadow-sm">
       <div className="flex-shrink-0 h-10 w-10 rounded-md bg-background border border-border flex items-center justify-center">
-        <Icon className="h-4 w-4 text-zinc-400" />
+        <Icon className="h-4 w-4 text-muted-foreground" />
       </div>
       <div>
         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">{label}</p>
@@ -202,12 +203,13 @@ export default function OpeningDetailLayout({ openingId }) {
             Back to Openings
           </Button>
 
-          {error ? (
-            <ErrorState message={error} onRetry={refresh} />
-          ) : isLoading ? (
-            <DetailsSkeleton />
-          ) : opening ? (
-            <div className="space-y-6">
+          <ErrorBoundary>
+            {error ? (
+              <ErrorState message={error} onRetry={refresh} />
+            ) : isLoading ? (
+              <DetailsSkeleton />
+            ) : opening ? (
+              <div className="space-y-6">
               {/* Header */}
               <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                 <div>
@@ -290,7 +292,7 @@ export default function OpeningDetailLayout({ openingId }) {
               {/* Upload Section */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-12">
                 {/* Upload Zone */}
-                <div className="p-8 bg-card border border-border rounded-none shadow-sm">
+                <div className="p-8 bg-card border border-border rounded-lg shadow-sm">
                   <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-8 flex items-center gap-3">
                     <Briefcase className="h-4 w-4" />
                     Upload Candidate Profiles
@@ -324,8 +326,9 @@ export default function OpeningDetailLayout({ openingId }) {
                   />
                 </div>
               </div>
-            </div>
-          ) : null}
+              </div>
+            ) : null}
+          </ErrorBoundary>
         </div>
       </div>
     </div>

@@ -13,6 +13,7 @@ import {
 } from "@/components/UI/shadcn/dialog";
 import { Skeleton } from "@/components/UI/shadcn/skeleton";
 import axiosInstance from "@/utils/Axios/AxiosInstance";
+import ErrorBoundary from "./ErrorBoundary";
 
 /**
  * Format date to display format
@@ -185,6 +186,7 @@ export default function ProfilesList({ profiles, isLoading, onRefresh }) {
 
   return (
     <>
+      <ErrorBoundary>
       <div className="space-y-3">
         {profiles.map((profile) => (
           <div
@@ -241,7 +243,7 @@ export default function ProfilesList({ profiles, isLoading, onRefresh }) {
               <Button
                 variant="outline"
                 size="icon"
-                className="h-8 w-8 rounded-md border-border bg-background hover:bg-red-600 hover:border-red-600 hover:text-white transition-all"
+                className="h-8 w-8 rounded-md border-border bg-background hover:bg-destructive hover:border-destructive hover:text-destructive-foreground transition-all"
                 onClick={() => handleDeleteClick(profile)}
                 title="Delete"
               >
@@ -251,6 +253,7 @@ export default function ProfilesList({ profiles, isLoading, onRefresh }) {
           </div>
         ))}
       </div>
+      </ErrorBoundary>
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
@@ -264,9 +267,9 @@ export default function ProfilesList({ profiles, isLoading, onRefresh }) {
           </DialogHeader>
 
           {deleteError && (
-            <div className="flex items-center gap-2 p-3 rounded-md bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+            <div className="flex items-center gap-2 p-3 rounded-md bg-destructive/10 border border-destructive/30">
               <AlertCircle className="h-4 w-4 text-red-500" />
-              <p className="text-sm text-red-600 dark:text-red-400">{deleteError}</p>
+              <p className="text-sm text-destructive">{deleteError}</p>
             </div>
           )}
 

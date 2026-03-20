@@ -19,7 +19,7 @@ import { Button } from "@/components/UI/shadcn/button";
 import { Skeleton } from "@/components/UI/shadcn/skeleton";
 import useHiringManagerProfiles from "@/hooks/ContractHiring/useHiringManagerProfiles";
 import ProfileCard from "./ProfileCard";
-import ErrorBoundary from "@/components/UserDashboardPage/ContractHiring/ErrorBoundary";
+import ErrorBoundary from "./ErrorBoundary";
 
 function isRecommendationFailed(profile) {
   return profile.recommended === null && Boolean(profile.recommendationReason);
@@ -49,16 +49,16 @@ function FilterChip({ label, isActive, onClick, count }) {
   return (
     <button
       onClick={onClick}
-      className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] transition-all ${
+      className={`inline-flex h-7 shrink-0 items-center gap-1 rounded-md border px-2.5 text-[9px] font-semibold uppercase tracking-[0.14em] transition-all ${
         isActive
-          ? "bg-foreground text-background border-foreground shadow-sm"
-          : "bg-card text-muted-foreground border-border hover:border-foreground/50 hover:text-foreground"
+          ? "border-foreground bg-foreground text-background shadow-sm"
+          : "border-border bg-card text-muted-foreground hover:border-foreground/40 hover:text-foreground"
       }`}
     >
       <span>{label}</span>
       {count !== undefined && (
         <span
-          className={`rounded-full px-1.5 py-0.5 text-[9px] font-semibold tracking-normal ${
+          className={`rounded-sm px-1 py-0.5 text-[8px] font-medium leading-none tracking-normal ${
             isActive
               ? "bg-background/15 text-background"
               : "bg-muted text-muted-foreground"
@@ -334,9 +334,9 @@ export default function HMOpeningDetailLayout({ openingId }) {
 
           {/* Filters */}
           {!isLoading && profiles.length > 0 && (
-            <div className="mb-6 flex flex-wrap items-center gap-2">
-              <div className="mr-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border bg-card">
-                <Filter className="h-3.5 w-3.5 text-muted-foreground" />
+            <div className="mb-6 flex flex-wrap items-center gap-1.5">
+              <div className="mr-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-border bg-card">
+                <Filter className="h-3 w-3 text-muted-foreground" />
               </div>
               <FilterChip
                 label="All"
@@ -374,7 +374,7 @@ export default function HMOpeningDetailLayout({ openingId }) {
                 onClick={() => setFilter("failed")}
                 count={stats.failed}
               />
-              <div className="w-px h-6 bg-border mx-2" />
+              <div className="mx-1 h-5 w-px bg-border" />
               <FilterChip
                 label="Shortlisted"
                 isActive={filter === "shortlisted"}

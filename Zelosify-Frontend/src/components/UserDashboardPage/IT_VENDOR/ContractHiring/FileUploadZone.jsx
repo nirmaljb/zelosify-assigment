@@ -191,9 +191,9 @@ export default function FileUploadZone({
 
       {/* Validation Errors */}
       {validationErrors.length > 0 && (
-        <div className="p-3 rounded-md bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+        <div className="p-3 rounded-md bg-destructive/10 border border-destructive/30">
           {validationErrors.map((error, index) => (
-            <p key={index} className="text-sm text-red-600 dark:text-red-400">
+            <p key={index} className="text-sm text-destructive">
               {error}
             </p>
           ))}

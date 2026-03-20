@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/UI/shadcn/button";
 import { Skeleton } from "@/components/UI/shadcn/skeleton";
 import useVendorOpenings from "@/hooks/ContractHiring/useVendorOpenings";
+import ErrorBoundary from "./ErrorBoundary";
 
 /**
  * Format date to display format (e.g., "Mar 18, 2026")
@@ -91,8 +92,8 @@ function EmptyState() {
 function ErrorState({ message, onRetry }) {
   return (
     <div className="flex flex-col items-center justify-center py-12 text-center">
-      <div className="rounded-full bg-red-100 dark:bg-red-900/30 p-3 mb-4">
-        <RefreshCw className="h-6 w-6 text-red-600 dark:text-red-400" />
+      <div className="rounded-full bg-destructive/10 p-3 mb-4">
+        <RefreshCw className="h-6 w-6 text-destructive" />
       </div>
       <h3 className="text-lg font-medium text-foreground mb-2">Failed to load openings</h3>
       <p className="text-sm text-muted-foreground mb-4">{message}</p>
@@ -186,6 +187,7 @@ export default function OpeningsListLayout() {
     <div className="flex min-h-screen bg-background text-foreground selection:bg-foreground selection:text-background">
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-7xl mx-auto px-8 py-12">
+          <ErrorBoundary>
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
             <div>
@@ -302,6 +304,7 @@ export default function OpeningsListLayout() {
               </>
             )}
           </div>
+          </ErrorBoundary>
         </div>
       </div>
     </div>
