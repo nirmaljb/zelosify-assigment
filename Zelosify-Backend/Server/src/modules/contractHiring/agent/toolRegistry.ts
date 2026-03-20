@@ -19,19 +19,12 @@ MUST be called FIRST before any other tools.
 
 Returns:
 - experienceYears: Total years of professional experience (number)
-- skills: Array of technical skills found in the resume
+- skills: Array of skills found in the resume
 - location: Candidate's location or "Unknown"
 - education: Array of degrees/certifications
 - keywords: Action verbs and impact indicators
 
-Example output:
-{
-  "experienceYears": 5,
-  "skills": ["JavaScript", "React", "Node.js", "AWS"],
-  "location": "San Francisco",
-  "education": ["Bachelor of Science", "Stanford"],
-  "keywords": ["developed", "led", "scalable"]
-}`,
+Return only the values actually extracted from the uploaded resume. Do not infer a sample candidate profile from this tool description.`,
   parameters: {
     type: "object",
     properties: {

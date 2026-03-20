@@ -30,7 +30,7 @@ const Integrations = () => {
           </h3>
           <p className="text-[#A1A1AA] max-w-2xl mx-auto font-medium">
             Connect Zelosify with the tools you already use. From Applicant Tracking 
-            Systems to communication platforms, we've got you covered.
+            Systems to communication platforms, we&apos;ve got you covered.
           </p>
         </div>
 

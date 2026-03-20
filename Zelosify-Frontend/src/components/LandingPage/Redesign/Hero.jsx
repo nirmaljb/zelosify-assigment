@@ -12,27 +12,27 @@ const Hero = () => {
 
       <div className="max-w-5xl mx-auto text-center relative z-10">
         {/* Badge */}
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 mb-8 animate-fade-in">
-          <span className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" />
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 mb-8">
+          <span className="w-2 h-2 rounded-full bg-purple-500" />
           <span className="text-xs font-medium text-[#A1A1AA] uppercase tracking-wider">
             Now in Private Beta
           </span>
           <div className="w-px h-3 bg-white/10 mx-1" />
-          <span className="text-xs font-bold text-white flex items-center gap-1 group cursor-pointer">
-            Read more <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+          <span className="text-xs font-bold text-white flex items-center gap-1 cursor-pointer">
+            Read more <ArrowRight className="w-3 h-3" />
           </span>
         </div>
 
         {/* Heading */}
-        <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-white mb-8 leading-[1.1]">
-          Orchestrate your <br />
-          <span className="text-transparent bg-clip-text bg-gradient-to-b from-white to-[#A1A1AA]">
+        <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-white mb-8 leading-tight">
+          Orchestrate your{" "}
+          <span className="text-purple-400">
             recruitment with AI.
           </span>
         </h1>
 
         {/* Subtext */}
-        <p className="text-lg md:text-xl text-[#A1A1AA] max-w-2xl mx-auto mb-10 leading-relaxed font-medium">
+        <p className="text-xl md:text-2xl text-[#A1A1AA] max-w-2xl mx-auto mb-10 leading-relaxed font-medium">
           The all-in-one platform for modern hiring teams. Automate resume parsing, 
           scoring, and candidate matching with precision-engineered AI-driven workflows.
         </p>
@@ -41,11 +41,11 @@ const Hero = () => {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <button className="
             px-8 py-4 bg-white text-black font-bold rounded-2xl
-            hover:bg-white/90 transition-all flex items-center gap-3 group
+            hover:bg-white/90 transition-all flex items-center gap-3
             shadow-[0_0_20px_rgba(255,255,255,0.1)]
           ">
             Start Hiring Now
-            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            <ArrowRight className="w-5 h-5" />
           </button>
           <button className="
             px-8 py-4 bg-white/5 text-white font-bold rounded-2xl

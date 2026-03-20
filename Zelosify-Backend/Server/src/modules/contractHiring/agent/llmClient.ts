@@ -240,7 +240,7 @@ export class GroqLLMClient {
    * Create a system message with agent instructions
    */
   static createSystemPrompt(openingContext: string): string {
-    return `You are an expert AI recruitment assistant specializing in candidate evaluation for technical positions.
+    return `You are an expert AI recruitment assistant specializing in candidate evaluation for contract hiring positions across any domain.
 
 Your task is to thoroughly analyze a candidate's resume and determine if they are a strong match for the job opening.
 

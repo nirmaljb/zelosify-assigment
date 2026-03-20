@@ -55,7 +55,7 @@ const Pricing = () => {
             Scale your hiring, <br /> not your costs.
           </h3>
           <p className="text-[#A1A1AA] max-w-2xl mx-auto font-medium">
-            Choose a plan that fits your current needs and scale when you're ready. 
+            Choose a plan that fits your current needs and scale when you&apos;re ready. 
             No hidden fees or long-term commitments.
           </p>
         </div>

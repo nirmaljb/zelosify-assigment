@@ -34,7 +34,7 @@ import {
 } from "./tools/scoringEngine.js";
 import { validateAgentResult, validateScoringResult } from "./schemaValidator.js";
 import { getFileBuffer } from "./storageHelper.js";
-import { wrapInSafetyBoundary, PromptInjectionValidator } from "./tools/sanitizer.js";
+import { wrapInSafetyBoundary } from "./tools/sanitizer.js";
 
 // ============================================================================
 // Configuration
@@ -123,6 +123,11 @@ export class AgentOrchestrator {
           break;
         } catch (error) {
           lastError = error instanceof Error ? error : new Error(String(error));
+
+          if (lastError.message.includes("PROMPT_INJECTION_BLOCKED")) {
+            throw lastError;
+          }
+
           this.reasoningState.retryCount = attempt + 1;
           this.reasoningState.errors.push(lastError.message);
 
@@ -374,6 +379,13 @@ After all tools complete, provide your final assessment.`,
       for (const toolCall of response.toolCalls) {
         const stepStart = Date.now();
         toolsInvoked.push(toolCall.name);
+        const effectiveArguments = this.resolveToolArguments(
+          toolCall,
+          profile,
+          requirements,
+          locationType,
+          profileId
+        );
 
         log({
           timestamp: new Date().toISOString(),
@@ -382,12 +394,13 @@ After all tools complete, provide your final assessment.`,
           openingId: opening.id,
           tool: toolCall.name,
           step: iteration,
-          metadata: { arguments: toolCall.arguments },
+          metadata: { arguments: effectiveArguments },
         });
 
         try {
           const result = await this.executeTool(
             toolCall,
+            effectiveArguments,
             profile,
             requirements,
             profileId
@@ -395,10 +408,15 @@ After all tools complete, provide your final assessment.`,
           toolResults.push(result);
 
           // Record reasoning step
-          this.recordStep(iteration, toolCall.name, toolCall.arguments, result.result, Date.now() - stepStart);
+          this.recordStep(iteration, toolCall.name, effectiveArguments, result.result, Date.now() - stepStart);
 
         } catch (error) {
           const errorMsg = error instanceof Error ? error.message : String(error);
+
+          if (errorMsg.includes("PROMPT_INJECTION_BLOCKED")) {
+            throw new Error(errorMsg);
+          }
+
           toolResults.push({
             toolCallId: toolCall.id,
             name: toolCall.name,
@@ -453,14 +471,75 @@ After all tools complete, provide your final assessment.`,
   /**
    * Execute a tool call
    */
+  private resolveToolArguments(
+    toolCall: ToolCall,
+    profile: { id: number; s3Key: string; originalFileName: string | null },
+    requirements: OpeningRequirements,
+    locationType: "REMOTE" | "ONSITE",
+    profileId: number
+  ): Record<string, unknown> {
+    const parsedResume = this.reasoningState.parsedResume;
+
+    switch (toolCall.name) {
+      case "parse_resume":
+        return {
+          profileId,
+          s3Key: profile.s3Key,
+        };
+
+      case "normalize_skills":
+        if (!parsedResume) {
+          throw new Error("normalize_skills requires parse_resume to complete first");
+        }
+        return {
+          skills: parsedResume.skills,
+        };
+
+      case "extract_features":
+        if (!parsedResume) {
+          throw new Error("extract_features requires parse_resume to complete first");
+        }
+        return {
+          experienceYears: parsedResume.experienceYears,
+          skills: parsedResume.skills,
+          location: parsedResume.location,
+          openingRequirements: requirements,
+        };
+
+      case "calculate_score":
+        if (!parsedResume) {
+          throw new Error("calculate_score requires parse_resume to complete first");
+        }
+        return {
+          candidateExperience: parsedResume.experienceYears,
+          candidateSkills:
+            parsedResume.normalizedSkills.length > 0
+              ? parsedResume.normalizedSkills
+              : normalizeSkills(parsedResume.skills),
+          candidateLocation: parsedResume.location,
+          requiredSkills: requirements.requiredSkills,
+          experienceMin: requirements.experienceMin,
+          experienceMax: requirements.experienceMax,
+          openingLocation: requirements.location || "Unknown",
+          locationType,
+        };
+
+      default:
+        return toolCall.arguments;
+    }
+  }
+
+  /**
+   * Execute a tool call
+   */
   private async executeTool(
     toolCall: ToolCall,
+    args: Record<string, unknown>,
     profile: { s3Key: string; originalFileName: string | null },
     requirements: OpeningRequirements,
     profileId: number
   ): Promise<ToolResult> {
     const startTime = Date.now();
-    const args = toolCall.arguments;
 
     try {
       let result: unknown;
@@ -472,6 +551,31 @@ After all tools complete, provide your final assessment.`,
           // Use s3Key to extract filename if originalFileName is null
           const fileName = profile.originalFileName || profile.s3Key.split("/").pop() || "resume.pdf";
           const parsed = await parseResume(fileBuffer, fileName);
+
+          const highestSeverity = parsed.injectionValidation?.highestSeverity;
+          const shouldBlockForInjection =
+            parsed.injectionValidation &&
+            !parsed.injectionValidation.safe &&
+            (highestSeverity === "HIGH" || highestSeverity === "CRITICAL");
+
+          if (shouldBlockForInjection) {
+            log({
+              timestamp: new Date().toISOString(),
+              event: "recommendation_blocked_prompt_injection",
+              profileId,
+              metadata: {
+                safe: parsed.injectionValidation.safe,
+                flagsCount: parsed.injectionValidation.flagsCount,
+                highestSeverity: parsed.injectionValidation.highestSeverity,
+                flagsByCategory: parsed.injectionValidation.flagsByCategory,
+              },
+            });
+
+            throw new Error(
+              `PROMPT_INJECTION_BLOCKED: severity=${parsed.injectionValidation.highestSeverity}, flags=${parsed.injectionValidation.flagsCount}`
+            );
+          }
+
           this.reasoningState.parsedResume = parsed;
           
           // Log injection validation result
@@ -496,6 +600,9 @@ After all tools complete, provide your final assessment.`,
         case "normalize_skills": {
           const skills = args.skills as string[];
           const normalized = normalizeSkills(skills);
+          if (this.reasoningState.parsedResume) {
+            this.reasoningState.parsedResume.normalizedSkills = normalized;
+          }
           result = { normalizedSkills: normalized };
           break;
         }
@@ -563,11 +670,17 @@ After all tools complete, provide your final assessment.`,
         durationMs: Date.now() - startTime,
       };
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+
+      if (errorMessage.includes("PROMPT_INJECTION_BLOCKED")) {
+        throw new Error(errorMessage);
+      }
+
       return {
         toolCallId: toolCall.id,
         name: toolCall.name,
         result: null,
-        error: error instanceof Error ? error.message : String(error),
+        error: errorMessage,
         durationMs: Date.now() - startTime,
       };
     }

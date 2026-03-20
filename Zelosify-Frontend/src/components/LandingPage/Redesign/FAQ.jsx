@@ -72,7 +72,7 @@ const FAQ = () => {
             Common Questions
           </h2>
           <h3 className="text-4xl font-bold text-white tracking-tight mb-4">
-            Got questions? We've got answers.
+            Got questions? We&apos;ve got answers.
           </h3>
         </div>
 

@@ -99,8 +99,8 @@ function EmptyState() {
       </div>
       <h3 className="text-lg font-medium text-foreground mb-2">No openings yet</h3>
       <p className="text-sm text-muted-foreground max-w-sm">
-        You don't have any contract openings assigned to you. 
-        Openings will appear here when they're created.
+        You don&apos;t have any contract openings assigned to you. 
+        Openings will appear here when they&apos;re created.
       </p>
     </div>
   );

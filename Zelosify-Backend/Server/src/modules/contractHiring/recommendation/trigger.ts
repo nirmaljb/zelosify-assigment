@@ -37,6 +37,10 @@ function log(entry: RecommendationLogEntry): void {
 function getUserFacingFailureReason(errorMessage: string): string {
   const normalized = errorMessage.toLowerCase();
 
+  if (normalized.includes("prompt_injection_blocked")) {
+    return "Parser blocked this resume because suspicious instruction-like content was detected. Please remove hidden/system-like directives and rerun the parser.";
+  }
+
   if (
     normalized.includes("token") ||
     normalized.includes("context length") ||

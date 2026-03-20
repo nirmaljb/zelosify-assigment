@@ -131,6 +131,17 @@ describe("containsInjectionAttempt", () => {
       `;
       expect(containsInjectionAttempt(technical)).toBe(false);
     });
+
+    it("should not flag legitimate sales resume language", () => {
+      const salesResume = `
+        Senior Sales Executive
+        8 years of experience in B2B SaaS sales
+        Increased pipeline by 40% and improved enterprise account conversion rates
+        Built performance metrics for regional teams and recommended process changes based on quarterly data
+        Skills: Salesforce, HubSpot, Negotiation, Account Management
+      `;
+      expect(containsInjectionAttempt(salesResume)).toBe(false);
+    });
   });
 });
 
